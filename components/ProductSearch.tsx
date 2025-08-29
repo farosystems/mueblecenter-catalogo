@@ -4,8 +4,9 @@ import { useState, useEffect, useRef } from 'react'
 import { Search, X, Package } from 'lucide-react'
 import Link from 'next/link'
 import { Product } from '@/lib/products'
-import { getProducts, getPlanesProducto, calcularCuota } from '@/lib/supabase-products'
+import { getProductsByZona, getPlanesProducto, calcularCuota } from '@/lib/supabase-products'
 import { formatearPrecio } from '@/lib/supabase-products'
+import { useZonaContext } from '@/contexts/ZonaContext'
 
 interface ProductSearchProps {
   className?: string
@@ -19,13 +20,14 @@ export default function ProductSearch({ className = '' }: ProductSearchProps) {
   const [loading, setLoading] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const { zonaSeleccionada } = useZonaContext()
 
-  // Cargar productos al montar el componente
+  // Cargar productos al montar el componente y cuando cambie la zona
   useEffect(() => {
     const loadProducts = async () => {
       setLoading(true)
       try {
-        const productsData = await getProducts()
+        const productsData = await getProductsByZona(zonaSeleccionada?.id || null)
         setProducts(productsData)
       } catch (error) {
         console.error('Error loading products:', error)
@@ -34,7 +36,7 @@ export default function ProductSearch({ className = '' }: ProductSearchProps) {
       }
     }
     loadProducts()
-  }, [])
+  }, [zonaSeleccionada])
 
   // Filtrar productos cuando cambie el término de búsqueda
   useEffect(() => {
@@ -106,7 +108,16 @@ export default function ProductSearch({ className = '' }: ProductSearchProps) {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Buscar productos..."
-            className="w-full pl-12 pr-12 py-3 bg-white/90 backdrop-blur-sm border border-violet-200 rounded-full text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300"
+            className="w-full pl-12 pr-12 py-3 bg-white/90 backdrop-blur-sm border border-violet-200 rounded-full text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-300"
+            style={{}}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#FF2F12'
+              e.target.style.boxShadow = '0 0 0 2px rgba(255, 47, 18, 0.2)'
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = ''
+              e.target.style.boxShadow = ''
+            }}
           />
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 size-5" />
           {searchTerm && (

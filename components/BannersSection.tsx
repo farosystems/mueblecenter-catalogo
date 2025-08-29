@@ -52,11 +52,11 @@ export default function BannersSection() {
   }
 
   return (
-    <section className="relative w-full py-16 bg-gradient-to-br from-blue-900 via-purple-900 to-blue-800">
+    <section className="relative w-full py-16 bg-green-gradient">
       {/* Fondo animado igual que productos destacados */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-yellow-400 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute bottom-20 right-10 w-40 h-40 bg-blue-400 rounded-full blur-3xl animate-float delay-200"></div>
+        <div className="absolute top-20 left-10 w-32 h-32 bg-white rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-20 right-10 w-40 h-40 bg-white rounded-full blur-3xl animate-float delay-200"></div>
       </div>
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -90,8 +90,8 @@ export default function BannersSection() {
                       onClick={() => changeBanner(index)}
                       className={`w-3 h-3 rounded-full transition-all duration-500 ease-in-out transform ${
                         index === currentBanner
-                          ? "bg-blue-600 scale-125 shadow-lg animate-pulse"
-                          : "bg-gray-400 hover:bg-blue-400 hover:scale-110"
+                          ? "bg-white scale-125 shadow-lg animate-pulse"
+                          : "bg-gray-400 hover:bg-white hover:scale-110"
                       }`}
                     />
                   ))}
@@ -105,7 +105,7 @@ export default function BannersSection() {
                 <button
                   onClick={() => changeBanner((currentBanner - 1 + banners.length) % banners.length)}
                   disabled={isAnimating}
-                  className={`absolute left-8 top-1/2 transform -translate-y-1/2 bg-blue-600/90 hover:bg-blue-700 text-white rounded-full p-3 shadow-2xl transition-all duration-500 hover:scale-110 active:scale-95 ${
+                  className={`absolute left-8 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white text-green-900 rounded-full p-3 shadow-2xl transition-all duration-500 hover:scale-110 active:scale-95 ${
                     isAnimating ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-3xl'
                   }`}
                 >
@@ -117,7 +117,7 @@ export default function BannersSection() {
                 <button
                   onClick={() => changeBanner((currentBanner + 1) % banners.length)}
                   disabled={isAnimating}
-                  className={`absolute right-8 top-1/2 transform -translate-y-1/2 bg-blue-600/90 hover:bg-blue-700 text-white rounded-full p-3 shadow-2xl transition-all duration-500 hover:scale-110 active:scale-95 ${
+                  className={`absolute right-8 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white text-green-900 rounded-full p-3 shadow-2xl transition-all duration-500 hover:scale-110 active:scale-95 ${
                     isAnimating ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-3xl'
                   }`}
                 >

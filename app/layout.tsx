@@ -3,6 +3,8 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { ShoppingListProvider } from "@/hooks/use-shopping-list"
+import { ZonaProvider } from "@/contexts/ZonaContext"
+import GlobalZonaModal from "@/components/GlobalZonaModal"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -13,27 +15,27 @@ export const metadata: Metadata = {
   keywords: "electrodomésticos, cuotas, financiación, heladeras, lavarropas, aires acondicionados",
   generator: 'v0.dev',
   icons: {
-    icon: '/logo.png',
+    icon: '/logo1.png',
   },
   openGraph: {
     type: 'website',
     locale: 'es_AR',
     url: 'https://catalogo-mundocuotas.vercel.app',
-    siteName: 'TuCatalogo',
-    title: 'TuCatalogo - Electrodomésticos en Cuotas',
+    siteName: 'MueblesCenter',
+    title: 'MueblesCenter - Electrodomésticos en Cuotas',
     description: 'Tu tienda de electrodomésticos de confianza con los mejores planes de financiación. Heladeras, lavarropas, aires acondicionados y más.',
     images: [
       {
         url: '/logo.svg',
         width: 1200,
         height: 630,
-        alt: 'TuCatalogo',
+        alt: 'MueblesCenter',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'TuCatalogo',
+    title: 'MueblesCenter',
     description: 'Tu tienda de electrodomésticos de confianza con los mejores planes de financiación. Heladeras, lavarropas, aires acondicionados y más.',
     images: ['/logo.svg'],
   },
@@ -47,9 +49,12 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={inter.className}>
-        <ShoppingListProvider>
-          {children}
-        </ShoppingListProvider>
+        <ZonaProvider>
+          <ShoppingListProvider>
+            {children}
+            <GlobalZonaModal />
+          </ShoppingListProvider>
+        </ZonaProvider>
       </body>
     </html>
   )

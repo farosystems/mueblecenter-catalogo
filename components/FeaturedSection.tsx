@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react"
 import ProductCard from "./ProductCard"
 import Pagination from "./Pagination"
-import { getFeaturedProducts } from "@/lib/supabase-products"
+import { getFeaturedProductsByZona } from "@/lib/supabase-products"
 import { Product } from "@/lib/products"
+import { useZonaContext } from "@/contexts/ZonaContext"
 
 const FEATURED_PRODUCTS_PER_PAGE = 3
 
@@ -13,16 +14,18 @@ export default function FeaturedSection() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const { zonaSeleccionada } = useZonaContext()
 
-  // Cargar productos destacados
+  // Cargar productos destacados - se ejecuta cuando cambia la zona
   useEffect(() => {
     const loadFeaturedProducts = async () => {
       try {
         setLoading(true)
         setError(null)
         
-        const products = await getFeaturedProducts()
+        const products = await getFeaturedProductsByZona(zonaSeleccionada?.id || null)
         setFeaturedProducts(products)
+        setCurrentPage(1) // Resetear paginación al cambiar zona
       } catch (err) {
         setError('Error al cargar los productos destacados')
       } finally {
@@ -30,18 +33,21 @@ export default function FeaturedSection() {
       }
     }
 
-    loadFeaturedProducts()
-  }, [])
+    // Solo cargar productos si hay una zona seleccionada
+    if (zonaSeleccionada) {
+      loadFeaturedProducts()
+    }
+  }, [zonaSeleccionada])
 
   if (loading) {
     return (
-      <section className="py-20 bg-gradient-to-br from-blue-900 via-purple-900 to-blue-800 text-white">
+      <section className="py-20 bg-featured-gradient text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-400 to-yellow-300 bg-clip-text text-transparent">
+            <h2 className="text-4xl font-bold mb-4 text-white">
               Productos Destacados
             </h2>
-            <p className="text-xl text-blue-100">Cargando productos destacados...</p>
+            <p className="text-xl text-green-100">Cargando productos destacados...</p>
           </div>
         </div>
       </section>
@@ -50,10 +56,10 @@ export default function FeaturedSection() {
 
   if (error) {
     return (
-      <section className="py-20 bg-gradient-to-br from-blue-900 via-purple-900 to-blue-800 text-white">
+      <section className="py-20 bg-featured-gradient text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-400 to-yellow-300 bg-clip-text text-transparent">
+            <h2 className="text-4xl font-bold mb-4 text-white">
               Productos Destacados
             </h2>
             <p className="text-xl text-red-300">Error al cargar los productos: {error}</p>
@@ -77,36 +83,36 @@ export default function FeaturedSection() {
   return (
     <section
       id="destacados"
-      className="py-20 bg-gradient-to-br from-blue-900 via-purple-900 to-blue-800 text-white relative overflow-hidden"
+      className="py-20 bg-featured-gradient text-white relative overflow-hidden"
     >
       {/* Fondo animado */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-yellow-400 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute bottom-20 right-10 w-40 h-40 bg-blue-400 rounded-full blur-3xl animate-float delay-200"></div>
+        <div className="absolute top-20 left-10 w-32 h-32 bg-white rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-20 right-10 w-40 h-40 bg-white rounded-full blur-3xl animate-float delay-200"></div>
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-400 to-yellow-300 bg-clip-text text-transparent">
+          <h2 className="text-4xl font-bold mb-4 text-white">
             Productos Destacados
           </h2>
-          <p className="text-xl text-blue-100 max-w-2xl mx-auto">
+          <p className="text-xl text-green-100 max-w-2xl mx-auto">
             Los electrodomésticos más vendidos y preferidos por nuestros clientes
           </p>
-          <div className="w-24 h-1 bg-gradient-to-r from-yellow-400 to-yellow-500 mx-auto mt-4 rounded-full animate-pulse-glow"></div>
+          <div className="w-24 h-1 bg-white mx-auto mt-4 rounded-full animate-pulse-glow"></div>
         </div>
 
         {/* Contador de productos destacados */}
         <div className="mb-8 text-center">
-          <p className="text-blue-100">
-            Mostrando <span className="font-semibold text-yellow-300">{displayProducts.length}</span> de{" "}
-            <span className="font-semibold text-yellow-300">{featuredProducts.length}</span> productos destacados
+          <p className="text-green-100">
+            Mostrando <span className="font-semibold text-white">{displayProducts.length}</span> de{" "}
+            <span className="font-semibold text-white">{featuredProducts.length}</span> productos destacados
           </p>
         </div>
 
         {displayProducts.length === 0 ? (
           <div className="text-center">
-            <p className="text-xl text-blue-100">No hay productos destacados disponibles</p>
+            <p className="text-xl text-green-100">No hay productos destacados disponibles</p>
           </div>
         ) : (
           <>

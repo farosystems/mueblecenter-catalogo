@@ -3,13 +3,28 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import TypewriterText from "./TypewriterText"
+import { getBannerPrincipal } from "@/lib/supabase-config"
 
 export default function HeroSection() {
   const [isVisible, setIsVisible] = useState(false)
+  const [bannerPrincipal, setBannerPrincipal] = useState<string | null>(null)
+  const [imageLoading, setImageLoading] = useState(true)
 
   useEffect(() => {
     setIsVisible(true)
+    loadBannerPrincipal()
   }, [])
+
+  const loadBannerPrincipal = async () => {
+    try {
+      const banner = await getBannerPrincipal()
+      setBannerPrincipal(banner)
+    } catch (error) {
+      console.error('Error al cargar banner principal:', error)
+    } finally {
+      setImageLoading(false)
+    }
+  }
 
   return (
     <section
@@ -18,14 +33,21 @@ export default function HeroSection() {
     >
       {/* Imagen de fondo */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="absolute inset-0"
         style={{
-          backgroundImage: "url('/hero-family.svg')"
+          backgroundImage: bannerPrincipal 
+            ? `url('${bannerPrincipal}')` 
+            : "none",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'fixed',
+          backgroundColor: bannerPrincipal ? 'transparent' : '#1F632A'
         }}
       >
         {/* Overlay mejorado para mayor calidad visual */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/60 via-purple-900/50 to-blue-900/60"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/50 via-purple-900/40 to-blue-900/50"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
       </div>
 
       {/* Fondo animado con partículas */}
@@ -54,9 +76,9 @@ export default function HeroSection() {
         <div className="grid md:grid-cols-2 gap-12 items-center mt-16">
           <div className={`transition-all duration-1000 delay-700 ${isVisible ? "animate-fade-in-left" : "opacity-0"}`}>
             <div className="bg-white/95 backdrop-blur-xl p-8 rounded-2xl shadow-2xl border border-white/30 hover:shadow-3xl transition-all duration-300">
-              <h2 className="text-3xl font-bold mb-6 text-orange-500">¿Quiénes Somos?</h2>
+              <h2 className="text-3xl font-bold mb-6" style={{color: '#FF2F12'}}>¿Quiénes Somos?</h2>
               <p className="text-lg mb-4 leading-relaxed text-gray-800">
-                En TuCatalogo somos una empresa especializada en la venta de electrodomésticos con más de 10 años de
+                En MueblesCenter somos una empresa especializada en la venta de electrodomésticos con más de 10 años de
                 experiencia en el mercado. Nos dedicamos a brindar soluciones accesibles para tu hogar.
               </p>
               <p className="text-lg leading-relaxed text-gray-800">
@@ -70,7 +92,7 @@ export default function HeroSection() {
             className={`transition-all duration-1000 delay-1000 ${isVisible ? "animate-fade-in-right" : "opacity-0"}`}
           >
             <div className="bg-white/95 backdrop-blur-xl p-8 rounded-2xl shadow-2xl border border-white/30 hover:shadow-3xl transition-all duration-300">
-              <h2 className="text-3xl font-bold mb-6 text-orange-500">¿Qué Hacemos?</h2>
+              <h2 className="text-3xl font-bold mb-6" style={{color: '#FF2F12'}}>¿Qué Hacemos?</h2>
               <ul className="text-lg space-y-4">
                 {[
                   "Venta de electrodomésticos de primera calidad",
@@ -93,7 +115,7 @@ export default function HeroSection() {
                               : "delay-1500"
                     } ${isVisible ? "animate-fade-in-left" : "opacity-0"}`}
                   >
-                    <span className="text-orange-500 mr-3 text-xl">✓</span>
+                    <span className="mr-3 text-xl" style={{color: '#FF2F12'}}>✓</span>
                     {item}
                   </li>
                 ))}

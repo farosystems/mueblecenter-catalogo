@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { Product, Categoria, Marca, PlanFinanciacion, ProductoPlan } from './products'
+import { getProductosConStockEnZona } from './supabase-config'
 
 // Función para formatear números sin decimales
 export function formatearPrecio(precio: number): string {
@@ -531,20 +532,20 @@ export async function getProductById(id: string): Promise<Product | null> {
 
 export async function getCategories(): Promise<Categoria[]> {
   try {
-    //console.log('🔍 getCategories: Intentando obtener categorías...')
+    console.log('🔍 getCategories: Intentando obtener categorías...')
     const { data, error } = await supabase
       .from('categoria')
       .select('*')
       .order('descripcion', { ascending: true })
 
-    //console.log('🔍 getCategories: Respuesta de Supabase:', { data, error })
+    console.log('🔍 getCategories: Respuesta de Supabase:', { data, error })
 
     if (error) {
       console.error('❌ Error fetching categories:', error)
       return []
     }
 
-    //console.log('✅ getCategories: Datos obtenidos:', data)
+    console.log('✅ getCategories: Datos obtenidos:', data)
     return data || []
   } catch (error) {
     console.error('❌ Error fetching categories:', error)
@@ -616,4 +617,50 @@ export async function getTipoPlanesProducto(productoId: string): Promise<'especi
     console.error('❌ getTipoPlanesProducto: Error general:', error)
     return 'ninguno'
   }
+}
+
+// FUNCIONES PARA FILTRADO POR ZONA/STOCK
+
+// Función auxiliar para filtrar productos por stock de zona
+async function filtrarProductosPorZona(productos: Product[], zonaId: number | null): Promise<Product[]> {
+  if (!zonaId) {
+    return productos
+  }
+
+  try {
+    // Obtener IDs de productos con stock disponible en la zona
+    const productosConStock = await getProductosConStockEnZona(zonaId)
+    
+    // Filtrar los productos que tienen stock en la zona
+    return productos.filter(producto => 
+      productosConStock.includes(parseInt(producto.id))
+    )
+  } catch (error) {
+    console.error('Error al filtrar productos por zona:', error)
+    return [] // En caso de error, devolver lista vacía para ser más restrictivo
+  }
+}
+
+// Versión modificada de getProducts que filtra por zona
+export async function getProductsByZona(zonaId: number | null = null): Promise<Product[]> {
+  const productos = await getProducts()
+  return filtrarProductosPorZona(productos, zonaId)
+}
+
+// Versión modificada de getFeaturedProducts que filtra por zona
+export async function getFeaturedProductsByZona(zonaId: number | null = null): Promise<Product[]> {
+  const productos = await getFeaturedProducts()
+  return filtrarProductosPorZona(productos, zonaId)
+}
+
+// Versión modificada de getProductsByCategory que filtra por zona
+export async function getProductsByCategoryAndZona(categoryId: number, zonaId: number | null = null): Promise<Product[]> {
+  const productos = await getProductsByCategory(categoryId)
+  return filtrarProductosPorZona(productos, zonaId)
+}
+
+// Versión modificada de getProductsByBrand que filtra por zona
+export async function getProductsByBrandAndZona(brandId: number, zonaId: number | null = null): Promise<Product[]> {
+  const productos = await getProductsByBrand(brandId)
+  return filtrarProductosPorZona(productos, zonaId)
 } 

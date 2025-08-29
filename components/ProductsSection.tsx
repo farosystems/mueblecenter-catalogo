@@ -5,6 +5,7 @@ import ProductCard from "./ProductCard"
 import FilterBar from "./FilterBar"
 import Pagination from "./Pagination"
 import { useProducts } from "@/hooks/use-products"
+import { useZonaContext } from "@/contexts/ZonaContext"
 import { debugPriceRangeIssue, debugActiveFilters } from "@/lib/debug-price-range"
 
 const PRODUCTS_PER_PAGE = 3
@@ -16,6 +17,7 @@ export default function ProductsSection() {
   const [selectedBrand, setSelectedBrand] = useState<number | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [animateProducts, setAnimateProducts] = useState(false)
+  const { zonaSeleccionada } = useZonaContext()
 
   const { 
     products, 
@@ -26,7 +28,7 @@ export default function ProductsSection() {
     filterByCategory, 
     filterByBrand, 
     clearFilters 
-  } = useProducts()
+  } = useProducts({ zonaId: zonaSeleccionada?.id })
 
   useEffect(() => {
     const observer = new IntersectionObserver(

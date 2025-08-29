@@ -3,15 +3,19 @@
 import { useState, useEffect } from 'react'
 import { Product, Categoria, Marca } from '@/lib/products'
 import { 
-  getProducts, 
-  getFeaturedProducts, 
-  getProductsByCategory, 
-  getProductsByBrand,
+  getProductsByZona, 
+  getFeaturedProductsByZona, 
+  getProductsByCategoryAndZona, 
+  getProductsByBrandAndZona,
   getCategories,
   getBrands
 } from '@/lib/supabase-products'
 
-export function useProducts() {
+interface UseProductsProps {
+  zonaId?: number | null
+}
+
+export function useProducts({ zonaId = null }: UseProductsProps = {}) {
   const [products, setProducts] = useState<Product[]>([])
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Categoria[]>([])
@@ -21,15 +25,15 @@ export function useProducts() {
 
   useEffect(() => {
     loadInitialData()
-  }, [])
+  }, [zonaId])
 
   const loadInitialData = async () => {
     try {
       setLoading(true)
       setError(null)
 
-      const featuredData = await getFeaturedProducts()
-      const productsData = await getProducts()
+      const featuredData = await getFeaturedProductsByZona(zonaId)
+      const productsData = await getProductsByZona(zonaId)
       const categoriesData = await getCategories()
       const brandsData = await getBrands()
 
@@ -73,7 +77,7 @@ export function useProducts() {
 
     try {
       setLoading(true)
-      const filteredProducts = await getProductsByCategory(categoryId)
+      const filteredProducts = await getProductsByCategoryAndZona(categoryId, zonaId)
       setProducts(filteredProducts)
     } catch (err) {
       setError('Error al filtrar por categoría')
@@ -90,7 +94,7 @@ export function useProducts() {
 
     try {
       setLoading(true)
-      const filteredProducts = await getProductsByBrand(brandId)
+      const filteredProducts = await getProductsByBrandAndZona(brandId, zonaId)
       setProducts(filteredProducts)
     } catch (err) {
       setError('Error al filtrar por marca')

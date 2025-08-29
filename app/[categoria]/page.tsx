@@ -8,6 +8,8 @@ import Footer from "@/components/Footer"
 import ProductCard from "@/components/ProductCard"
 import Pagination from "@/components/Pagination"
 import { useProducts } from "@/hooks/use-products"
+import { useZonaContext } from "@/contexts/ZonaContext"
+import { ZonaGuard } from "@/components/ZonaGuard"
 import { Categoria } from "@/lib/products"
 
 const PRODUCTS_PER_PAGE = 6
@@ -24,13 +26,14 @@ export default function CategoriaPage({ params }: CategoriaPageProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [animateProducts, setAnimateProducts] = useState(false)
 
+  const { zonaSeleccionada } = useZonaContext()
   const { 
     products, 
     categories, 
     loading, 
     error, 
     clearFilters 
-  } = useProducts()
+  } = useProducts({ zonaId: zonaSeleccionada?.id || null })
 
   // Obtener parámetros de la URL
   useEffect(() => {
@@ -109,52 +112,59 @@ export default function CategoriaPage({ params }: CategoriaPageProps) {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
-        <GlobalAppBar />
-        <div className="flex items-center justify-center py-20" style={{ marginTop: '140px' }}>
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-violet-600 mx-auto mb-4"></div>
-            <h2 className="text-2xl font-bold text-gray-900">Cargando productos...</h2>
+      <ZonaGuard>
+        <div className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+          <GlobalAppBar />
+          <div className="flex items-center justify-center py-20" style={{ marginTop: '140px' }}>
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-violet-600 mx-auto mb-4"></div>
+              <h2 className="text-2xl font-bold text-gray-900">Cargando productos...</h2>
+            </div>
           </div>
+          <Footer />
         </div>
-        <Footer />
-      </div>
+      </ZonaGuard>
     )
   }
 
   if (error) {
     return (
-      <div className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
-        <GlobalAppBar />
-        <div className="flex items-center justify-center py-20" style={{ marginTop: '140px' }}>
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Error al cargar productos</h2>
-            <p className="text-xl text-red-600">{error}</p>
+      <ZonaGuard>
+        <div className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+          <GlobalAppBar />
+          <div className="flex items-center justify-center py-20" style={{ marginTop: '140px' }}>
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Error al cargar productos</h2>
+              <p className="text-xl text-red-600">{error}</p>
+            </div>
           </div>
+          <Footer />
         </div>
-        <Footer />
-      </div>
+      </ZonaGuard>
     )
   }
 
   if (!categoria) {
     return (
-      <div className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
-        <GlobalAppBar />
-        <div className="flex items-center justify-center py-20" style={{ marginTop: '140px' }}>
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Categoría no encontrada</h2>
-            <p className="text-xl text-gray-600">La categoría "{resolvedParams.categoria}" no existe</p>
+      <ZonaGuard>
+        <div className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+          <GlobalAppBar />
+          <div className="flex items-center justify-center py-20" style={{ marginTop: '140px' }}>
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Categoría no encontrada</h2>
+              <p className="text-xl text-gray-600">La categoría "{resolvedParams.categoria}" no existe</p>
+            </div>
           </div>
+          <Footer />
         </div>
-        <Footer />
-      </div>
+      </ZonaGuard>
     )
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
-      <GlobalAppBar />
+    <ZonaGuard>
+      <div className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+        <GlobalAppBar />
       
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-16 py-4" style={{ marginTop: '140px' }}>
         {/* Buscador */}
@@ -176,7 +186,7 @@ export default function CategoriaPage({ params }: CategoriaPageProps) {
         {/* Header de la página */}
         <div className="mb-8">
           <div className="text-center w-full">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold text-gray-900 mb-2 bg-gradient-to-r from-green-600 to-green-400 bg-clip-text text-transparent">
               {categoria.descripcion}
             </h1>
             <p className="text-gray-600 mb-4">
@@ -257,7 +267,8 @@ export default function CategoriaPage({ params }: CategoriaPageProps) {
           />
         )}
       </div>
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </ZonaGuard>
   )
 }

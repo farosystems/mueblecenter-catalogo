@@ -3,6 +3,52 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Colores personalizados */
+.bg-green-gradient {
+  background: linear-gradient(to right, #1F632A, #8FD527, #1F632A);
+}
+
+.bg-green-gradient-br {
+  background: linear-gradient(to bottom right, #8FD527, #1F632A);
+}
+
+.bg-green-gradient-lr {
+  background: linear-gradient(to right, #8FD527, #1F632A);
+}
+
+.bg-green-gradient-hover:hover {
+  background: linear-gradient(to right, #1F632A, #8FD527) !important;
+}
+
+.bg-green-gradient-br-hover:hover {
+  background: linear-gradient(to bottom right, #1F632A, #8FD527) !important;
+}
+
+/* Gradientes específicos para secciones */
+.bg-footer-solid {
+  background-color: #1F632A;
+}
+
+.bg-featured-gradient {
+  background: linear-gradient(to right, #1F632A 0%, #8FD527 100%);
+}
+
+.bg-banners-gradient {
+  background: linear-gradient(45deg, #1F632A 0%, #357A43 30%, #1F632A 70%, #2B6B35 100%);
+}
+
+.text-green-custom {
+  color: #1F632A;
+}
+
+.text-green-light-custom {
+  color: #8FD527;
+}
+
+.border-green-custom {
+  border-color: #1F632A;
+}
+
 /* Fuentes personalizadas */
 @font-face {
   font-family: 'Palm Royale';

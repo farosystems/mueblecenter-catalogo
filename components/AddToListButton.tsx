@@ -35,9 +35,20 @@ export default function AddToListButton({ product, variant = 'card' }: AddToList
           isInShoppingList
             ? 'bg-green-100 text-green-700 cursor-not-allowed'
             : isAdding
-            ? 'bg-violet-100 text-violet-700 cursor-not-allowed'
-            : 'bg-violet-600 text-white hover:bg-violet-700 hover:scale-105 shadow-lg hover:shadow-xl'
+            ? 'bg-red-100 text-red-700 cursor-not-allowed'
+            : 'text-white hover:scale-105 shadow-lg hover:shadow-xl'
         }`}
+        style={!isInShoppingList && !isAdding ? {backgroundColor: '#FF2F12'} : {}}
+        onMouseEnter={(e) => {
+          if (!isInShoppingList && !isAdding) {
+            e.target.style.backgroundColor = '#E02A10'
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isInShoppingList && !isAdding) {
+            e.target.style.backgroundColor = '#FF2F12'
+          }
+        }}
         title={isInShoppingList ? 'Ya está en la lista' : 'Agregar a lista de compra'}
       >
         {isAdding ? (
@@ -69,9 +80,20 @@ export default function AddToListButton({ product, variant = 'card' }: AddToList
         isInShoppingList
           ? 'bg-green-100 text-green-700 cursor-not-allowed'
           : isAdding
-          ? 'bg-violet-100 text-violet-700 cursor-not-allowed'
-          : 'bg-violet-600 text-white hover:bg-violet-700 hover:scale-105 shadow-lg hover:shadow-xl'
+          ? 'bg-red-100 text-red-700 cursor-not-allowed'
+          : 'text-white hover:scale-105 shadow-lg hover:shadow-xl'
       }`}
+      style={!isInShoppingList && !isAdding ? {backgroundColor: '#FF2F12'} : {}}
+      onMouseEnter={(e) => {
+        if (!isInShoppingList && !isAdding) {
+          e.target.style.backgroundColor = '#E02A10'
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isInShoppingList && !isAdding) {
+          e.target.style.backgroundColor = '#FF2F12'
+        }
+      }}
       title={isInShoppingList ? 'Ya está en la lista' : 'Agregar a lista de compra'}
     >
       {isAdding ? (

@@ -12,6 +12,7 @@ export interface ConfiguracionWeb {
   banner: string | null
   banner_2: string | null
   banner_3: string | null
+  banner_principal: string | null
 }
 
 export interface Zona {
@@ -175,5 +176,104 @@ export async function getBanners(): Promise<string[]> {
   } catch (error) {
     console.error('Error al obtener banners:', error)
     return []
+  }
+}
+
+// Función para obtener el banner principal del home
+export async function getBannerPrincipal(): Promise<string | null> {
+  try {
+    const configuraciones = await getConfiguracionWeb()
+    
+    // Obtener el banner_principal de la configuración más reciente
+    const config = configuraciones[0]
+    return config?.banner_principal || null
+  } catch (error) {
+    console.error('Error al obtener banner principal:', error)
+    return null
+  }
+}
+
+// Interfaces para stock por sucursales
+export interface StockSucursal {
+  id: number
+  fk_id_producto: number
+  fk_id_zona: number
+  stock: number
+  stock_minimo: number
+  activo: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Función para obtener el stock de productos por zona
+export async function getStockPorZona(zonaId: number): Promise<StockSucursal[]> {
+  try {
+    const { data, error } = await supabase
+      .from('stock_sucursales')
+      .select('*')
+      .eq('fk_id_zona', zonaId)
+      .eq('activo', true)
+      .gte('stock', 0) // Stock mayor o igual a 0
+
+    if (error) {
+      console.error('Error al obtener stock por zona:', error)
+      return []
+    }
+
+    return data || []
+  } catch (error) {
+    console.error('Error al obtener stock por zona:', error)
+    return []
+  }
+}
+
+// Función para obtener productos con stock disponible en una zona
+export async function getProductosConStockEnZona(zonaId: number): Promise<number[]> {
+  try {
+    // Obtener todos los registros de stock de la zona y filtrar en JavaScript
+    const { data, error } = await supabase
+      .from('stock_sucursales')
+      .select('fk_id_producto, stock, stock_minimo')
+      .eq('fk_id_zona', zonaId)
+      .eq('activo', true)
+      .gte('stock', 0) // Solo productos con stock no negativo
+
+    if (error) {
+      console.error('Error al obtener productos con stock en zona:', error)
+      return []
+    }
+
+    // Filtrar productos donde stock > stock_minimo
+    const productosConStock = data?.filter(item => 
+      item.stock > (item.stock_minimo || 0)
+    ) || []
+
+    return productosConStock.map(item => item.fk_id_producto)
+  } catch (error) {
+    console.error('Error al obtener productos con stock en zona:', error)
+    return []
+  }
+}
+
+// Función para obtener stock específico de un producto en una zona
+export async function getStockProductoEnZona(productoId: number, zonaId: number): Promise<StockSucursal | null> {
+  try {
+    const { data, error } = await supabase
+      .from('stock_sucursales')
+      .select('*')
+      .eq('fk_id_producto', productoId)
+      .eq('fk_id_zona', zonaId)
+      .eq('activo', true)
+      .single()
+
+    if (error) {
+      console.error('Error al obtener stock del producto en zona:', error)
+      return null
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error al obtener stock del producto en zona:', error)
+    return null
   }
 }

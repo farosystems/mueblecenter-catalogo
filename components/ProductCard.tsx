@@ -62,7 +62,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               `/${productCategory.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}/${product.id}` :
               `/varios/${product.id}`
             }
-            className="w-full bg-blue-600 text-white py-2 px-3 sm:px-4 rounded-xl font-semibold hover:bg-blue-700 transition-colors duration-300 block text-center text-xs sm:text-sm"
+            className="w-full text-white py-2 px-3 sm:px-4 rounded-xl font-semibold transition-colors duration-300 block text-center text-xs sm:text-sm" style={{backgroundColor: '#8FD527'}} onMouseEnter={(e) => e.target.style.backgroundColor = '#7BC624'} onMouseLeave={(e) => e.target.style.backgroundColor = '#8FD527'}
           >
             Ver Detalles
           </Link>

@@ -1,8 +1,10 @@
 import HeroSection from "@/components/HeroSection"
 import BannersSection from "@/components/BannersSection"
+import CategoriesCarousel from "@/components/CategoriesCarousel"
 import FeaturedSection from "@/components/FeaturedSection"
 import GlobalAppBar from "@/components/GlobalAppBar"
 import Footer from "@/components/Footer"
+// import { ZonaWrapper } from "@/components/ZonaWrapper"
 
 export default function Home() {
   return (
@@ -12,6 +14,7 @@ export default function Home() {
       <main>
         <HeroSection />
         <BannersSection />
+        <CategoriesCarousel />
         <FeaturedSection />
       </main>
       

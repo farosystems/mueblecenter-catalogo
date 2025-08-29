@@ -7,6 +7,7 @@ import Footer from "@/components/Footer"
 import ProductCard from "@/components/ProductCard"
 import Pagination from "@/components/Pagination"
 import { useProducts } from "@/hooks/use-products"
+import { useZonaContext } from "@/contexts/ZonaContext"
 
 const PRODUCTS_PER_PAGE = 6
 
@@ -14,12 +15,13 @@ export default function BuscarPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [animateProducts, setAnimateProducts] = useState(false)
+  const { zonaSeleccionada } = useZonaContext()
 
   const { 
     products, 
     loading, 
     error 
-  } = useProducts()
+  } = useProducts({ zonaId: zonaSeleccionada?.id || null })
 
   // Obtener parámetros de la URL
   useEffect(() => {

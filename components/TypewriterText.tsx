@@ -14,14 +14,14 @@ const fonts = [
 ]
 
 const colors = [
-  "text-yellow-400", 
-  "text-yellow-500", 
-  "text-orange-400", 
-  "text-orange-500", 
-  "text-violet-700",
-  "text-violet-800",
-  "text-amber-500",
-  "text-amber-600"
+  "#FF2F12", // rojo
+  "#FF8500", // naranja
+  "#FFD700", // amarillo
+  "#8FD527", // verde
+  "#FF2F12", // rojo
+  "#FF8500", // naranja
+  "#FFD700", // amarillo
+  "#8FD527"  // verde
 ]
 
 export default function TypewriterText() {
@@ -31,7 +31,7 @@ export default function TypewriterText() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [showCursor, setShowCursor] = useState(true)
 
-  const fullText = "TuCatalogo"
+  const fullText = "MueblesCenter"
 
   useEffect(() => {
     const timeout = setTimeout(
@@ -69,7 +69,10 @@ export default function TypewriterText() {
   }, [])
 
   return (
-    <span className={`${fonts[currentFontIndex]} ${colors[currentColorIndex]} text-glow transition-all duration-700 ease-in-out inline-block`}>
+    <span 
+      className={`${fonts[currentFontIndex]} text-glow transition-all duration-700 ease-in-out inline-block`}
+      style={{color: colors[currentColorIndex]}}
+    >
       {displayText}
       <span className={`${showCursor ? "opacity-100" : "opacity-0"} transition-opacity duration-100`}>|</span>
     </span>

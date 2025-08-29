@@ -37,7 +37,7 @@ export default function Navbar() {
               href="/"
               className="text-2xl font-bold text-yellow-400 hover:text-yellow-300 transition-colors duration-300 animate-pulse-glow"
             >
-              TuCatalogo
+              MueblesCenter
             </Link>
           </div>
 

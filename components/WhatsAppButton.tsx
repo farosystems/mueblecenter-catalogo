@@ -1,11 +1,11 @@
 "use client"
 
 import { MessageCircle } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import type { Product } from "@/lib/products"
 import { useConfiguracion } from "@/hooks/use-configuracion"
-import { useZonas } from "@/hooks/use-zonas"
-import ZonaSelectorDialog from "./ZonaSelectorDialog"
+import { useZonaContext } from "@/contexts/ZonaContext"
+import { getTelefonoPorZona } from "@/lib/supabase-config"
 
 interface WhatsAppButtonProps {
   product: Product
@@ -13,9 +13,30 @@ interface WhatsAppButtonProps {
 
 export default function WhatsAppButton({ product }: WhatsAppButtonProps) {
   const [isHovered, setIsHovered] = useState(false)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [telefonoZona, setTelefonoZona] = useState<string | null>(null)
+  const [loadingTelefono, setLoadingTelefono] = useState(false)
   const { telefono, loading: configLoading, error: configError } = useConfiguracion()
-  const { zonas, configuracionZonas, loading: zonasLoading } = useZonas()
+  const { zonaSeleccionada } = useZonaContext()
+  
+  // Cargar teléfono de la zona seleccionada
+  useEffect(() => {
+    const loadTelefonoZona = async () => {
+      if (zonaSeleccionada) {
+        setLoadingTelefono(true)
+        try {
+          const telefono = await getTelefonoPorZona(zonaSeleccionada.id)
+          setTelefonoZona(telefono)
+        } catch (error) {
+          console.error('Error al obtener teléfono de la zona:', error)
+          setTelefonoZona(null)
+        } finally {
+          setLoadingTelefono(false)
+        }
+      }
+    }
+    
+    loadTelefonoZona()
+  }, [zonaSeleccionada])
   
   // Función para generar el mensaje de WhatsApp
   const generateWhatsAppMessage = (product: Product): string => {
@@ -60,35 +81,25 @@ export default function WhatsAppButton({ product }: WhatsAppButtonProps) {
   }
 
   const handleClick = () => {
-    // Verificar si hay zonas configuradas
-    const zonasConTelefono = zonas.filter(zona => 
-      configuracionZonas.some(config => config.fk_id_zona === zona.id)
-    )
-
-    if (zonasConTelefono.length > 0) {
-      // Si hay zonas configuradas, abrir el diálogo de selección
-      setIsDialogOpen(true)
+    // Usar el teléfono de la zona seleccionada o el teléfono por defecto
+    const phoneNumber = telefonoZona || telefono || "5491123365608"
+    const message = generateWhatsAppMessage(product)
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
+    
+    // Detectar si es móvil para usar el método correcto
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    
+    if (isMobile) {
+      // En móviles, usar window.location.href para abrir la app directamente
+      window.location.href = whatsappUrl
     } else {
-      // Si no hay zonas configuradas, usar el teléfono por defecto
-      const phoneNumber = telefono || "5491123365608"
-      const message = generateWhatsAppMessage(product)
-      const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
-      
-      // Detectar si es móvil para usar el método correcto
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-      
-      if (isMobile) {
-        // En móviles, usar window.location.href para abrir la app directamente
-        window.location.href = whatsappUrl
-      } else {
-        // En desktop, usar window.open
-        window.open(whatsappUrl, '_blank')
-      }
+      // En desktop, usar window.open
+      window.open(whatsappUrl, '_blank')
     }
   }
 
   // Si está cargando, mostrar un botón deshabilitado
-  if (configLoading || zonasLoading) {
+  if (configLoading || loadingTelefono) {
     return (
       <button
         disabled
@@ -131,12 +142,6 @@ export default function WhatsAppButton({ product }: WhatsAppButtonProps) {
           }`}
         ></div>
       </button>
-
-      <ZonaSelectorDialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        product={product}
-      />
     </>
   )
 }

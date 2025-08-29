@@ -1,6 +1,7 @@
 export interface Categoria {
   id: number
   descripcion: string
+  logo?: string
   created_at: string
 }
 

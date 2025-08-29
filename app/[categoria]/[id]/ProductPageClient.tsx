@@ -139,7 +139,7 @@ export default function ProductPageClient({ params }: ProductPageClientProps) {
         <div className="mb-6">
           <button
             onClick={handleBackToCategory}
-            className="inline-flex items-center text-violet-600 hover:text-violet-700 transition-colors"
+            className="inline-flex items-center text-green-600 hover:text-green-700 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Volver a {categoria?.descripcion}
@@ -216,7 +216,7 @@ export default function ProductPageClient({ params }: ProductPageClientProps) {
         <div className="mb-16 bg-gray-50 py-16">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              ¿Por qué elegir TuCatalogo?
+              ¿Por qué elegir MueblesCenter?
             </h2>
           </div>
 
@@ -256,14 +256,18 @@ export default function ProductPageClient({ params }: ProductPageClientProps) {
           </div>
         </div>
 
-        {/* Productos relacionados */}
-        {relatedProducts.length > 0 && (
-          <div className="mb-16">
+      </div>
+      
+      {/* Productos relacionados - Full Width */}
+      <section className="bg-featured-gradient py-16 text-white">
+        {console.log('🔍 RelatedProducts length:', relatedProducts.length)}
+        {relatedProducts.length > 0 ? (
+          <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-16">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              <h2 className="text-3xl font-bold text-white mb-4">
                 Productos que te pueden interesar
               </h2>
-              <p className="text-lg text-gray-600">
+              <p className="text-lg text-green-100">
                 Descubre más productos de la misma categoría que podrían ser perfectos para ti
               </p>
             </div>
@@ -280,15 +284,25 @@ export default function ProductPageClient({ params }: ProductPageClientProps) {
             <div className="text-center mt-8">
               <button
                 onClick={handleBackToCategory}
-                className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                className="inline-flex items-center px-8 py-4 bg-white text-green-700 font-semibold rounded-xl hover:bg-green-50 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
               >
                 Ver más productos
                 <ArrowLeft className="ml-2 w-5 h-5 rotate-180" />
               </button>
             </div>
           </div>
+        ) : (
+          <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-16 text-center">
+            <h2 className="text-3xl font-bold text-white mb-4">
+              Productos que te pueden interesar
+            </h2>
+            <p className="text-lg text-green-100">
+              No hay productos relacionados disponibles en este momento
+            </p>
+          </div>
         )}
-      </div>
+      </section>
+      
       <Footer />
     </div>
   )
