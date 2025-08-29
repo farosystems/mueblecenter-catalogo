@@ -6,6 +6,14 @@ export interface Configuracion {
   telefono: string | null
 }
 
+export interface ConfiguracionWeb {
+  id: number
+  created_at: string
+  banner: string | null
+  banner_2: string | null
+  banner_3: string | null
+}
+
 export interface Zona {
   id: number
   created_at: string
@@ -121,5 +129,51 @@ export async function getTelefonoPorZona(zonaId: number): Promise<string | null>
   } catch (error) {
     console.error('Error al obtener teléfono por zona:', error)
     return null
+  }
+}
+
+export async function getConfiguracionWeb(): Promise<ConfiguracionWeb[]> {
+  try {
+    const { data, error } = await supabase
+      .from('configuracion_web')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error al obtener configuración web:', error)
+      return []
+    }
+
+    return data || []
+  } catch (error) {
+    console.error('Error al obtener configuración web:', error)
+    return []
+  }
+}
+
+export async function getBanners(): Promise<string[]> {
+  try {
+    const configuraciones = await getConfiguracionWeb()
+    const banners: string[] = []
+    
+    configuraciones.forEach(config => {
+      // Agregar banner principal si existe
+      if (config.banner) {
+        banners.push(config.banner)
+      }
+      // Agregar banner_2 si existe
+      if (config.banner_2) {
+        banners.push(config.banner_2)
+      }
+      // Agregar banner_3 si existe
+      if (config.banner_3) {
+        banners.push(config.banner_3)
+      }
+    })
+    
+    return banners
+  } catch (error) {
+    console.error('Error al obtener banners:', error)
+    return []
   }
 }
