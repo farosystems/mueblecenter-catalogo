@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link"
-import { Menu, ShoppingBag, X, Home, Star, MapPin, RefreshCw } from "lucide-react"
+import { Menu, ShoppingBag, X, Home, Star, MapPin, RefreshCw, ChevronRight } from "lucide-react"
 import ProductSearch from "./ProductSearch"
 import CategoriesDropdown from "./CategoriesDropdown"
 import ShoppingListModal from "./ShoppingListModal"
@@ -11,6 +11,7 @@ import { useZonaContext } from "@/contexts/ZonaContext"
 
 export default function GlobalAppBar() {
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false)
+  const [isMobileCategoriesOpen, setIsMobileCategoriesOpen] = useState(false)
   const [isShoppingListOpen, setIsShoppingListOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { itemCount } = useShoppingList()
@@ -120,6 +121,7 @@ export default function GlobalAppBar() {
                 <CategoriesDropdown 
                   isOpen={isCategoriesOpen}
                   onClose={() => setIsCategoriesOpen(false)}
+                  isMobile={false}
                 />
               </div>
             </div>
@@ -220,7 +222,8 @@ export default function GlobalAppBar() {
               {/* Categorías móvil */}
               <button
                 onClick={() => {
-                  setIsCategoriesOpen(!isCategoriesOpen)
+                  setIsMobileCategoriesOpen(true)
+                  setIsMobileMenuOpen(false)
                 }}
                 className="flex items-center justify-between w-full px-4 py-3 text-green-700 hover:bg-green-100 rounded-lg transition-colors font-medium"
               >
@@ -228,23 +231,8 @@ export default function GlobalAppBar() {
                   <Menu className="mr-3" size={20} />
                   Categorías
                 </div>
-                <span className={`transform transition-transform ${isCategoriesOpen ? 'rotate-180' : ''}`}>
-                  ▼
-                </span>
+                <ChevronRight size={20} />
               </button>
-              
-              {/* Dropdown de categorías móvil */}
-              {isCategoriesOpen && (
-                <div className="pl-8 pb-2">
-                  <CategoriesDropdown 
-                    isOpen={true}
-                    onClose={() => {
-                      setIsCategoriesOpen(false)
-                      setIsMobileMenuOpen(false)
-                    }}
-                  />
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -254,6 +242,13 @@ export default function GlobalAppBar() {
       <ShoppingListModal 
         isOpen={isShoppingListOpen}
         onClose={() => setIsShoppingListOpen(false)}
+      />
+      
+      {/* Modal de Categorías móvil */}
+      <CategoriesDropdown 
+        isOpen={isMobileCategoriesOpen}
+        onClose={() => setIsMobileCategoriesOpen(false)}
+        isMobile={true}
       />
     </>
   )

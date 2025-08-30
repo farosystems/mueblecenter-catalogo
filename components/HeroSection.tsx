@@ -73,15 +73,15 @@ export default function HeroSection() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-12 items-center mt-16">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-12 items-center mt-16 max-w-4xl mx-auto">
           <div className={`transition-all duration-1000 delay-700 ${isVisible ? "animate-fade-in-left" : "opacity-0"}`}>
-            <div className="bg-white/95 backdrop-blur-xl p-8 rounded-2xl shadow-2xl border border-white/30 hover:shadow-3xl transition-all duration-300">
-              <h2 className="text-3xl font-bold mb-6" style={{color: '#FF2F12'}}>¿Quiénes Somos?</h2>
-              <p className="text-lg mb-4 leading-relaxed text-gray-800">
+            <div className="bg-white/95 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl shadow-2xl border border-white/30 hover:shadow-3xl transition-all duration-300 max-w-sm sm:max-w-md mx-auto">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6" style={{color: '#FF2F12'}}>¿Quiénes Somos?</h2>
+              <p className="text-sm sm:text-base md:text-lg mb-3 sm:mb-4 leading-relaxed text-gray-800">
                 En MueblesCenter somos una empresa especializada en la venta de electrodomésticos con más de 10 años de
                 experiencia en el mercado. Nos dedicamos a brindar soluciones accesibles para tu hogar.
               </p>
-              <p className="text-lg leading-relaxed text-gray-800">
+              <p className="text-sm sm:text-base md:text-lg leading-relaxed text-gray-800">
                 Ofrecemos productos de las mejores marcas con planes de financiación flexibles que se adaptan a tu
                 presupuesto.
               </p>
@@ -91,9 +91,9 @@ export default function HeroSection() {
           <div
             className={`transition-all duration-1000 delay-1000 ${isVisible ? "animate-fade-in-right" : "opacity-0"}`}
           >
-            <div className="bg-white/95 backdrop-blur-xl p-8 rounded-2xl shadow-2xl border border-white/30 hover:shadow-3xl transition-all duration-300">
-              <h2 className="text-3xl font-bold mb-6" style={{color: '#FF2F12'}}>¿Qué Hacemos?</h2>
-              <ul className="text-lg space-y-4">
+            <div className="bg-white/95 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl shadow-2xl border border-white/30 hover:shadow-3xl transition-all duration-300 max-w-sm sm:max-w-md mx-auto">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6" style={{color: '#FF2F12'}}>¿Qué Hacemos?</h2>
+              <ul className="text-sm sm:text-base md:text-lg space-y-3 sm:space-y-4">
                 {[
                   "Venta de electrodomésticos de primera calidad",
                   "Planes de financiación en 3, 6, 12 y 18 cuotas",

@@ -35,9 +35,9 @@ export default function ZonaSelectorModal({ isOpen, onClose }: ZonaSelectorModal
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-300">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-300 ease-out">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-300 ease-out flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-br from-green-600 via-green-700 to-green-800 text-white p-8 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-green-600 via-green-700 to-green-800 text-white p-6 sm:p-8 relative overflow-hidden flex-shrink-0">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
           
@@ -55,7 +55,7 @@ export default function ZonaSelectorModal({ isOpen, onClose }: ZonaSelectorModal
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6 flex-1 overflow-y-auto">
           {loading ? (
             <div className="text-center py-12">
               <div className="relative mx-auto w-16 h-16 mb-6">
@@ -88,7 +88,7 @@ export default function ZonaSelectorModal({ isOpen, onClose }: ZonaSelectorModal
                 <p className="text-gray-600 text-sm">Elige la zona más cercana a tu ubicación</p>
               </div>
               
-              <div className="space-y-3 max-h-80 overflow-y-auto">
+              <div className="space-y-3 max-h-60 sm:max-h-80 overflow-y-auto scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-green-300 scrollbar-thumb-rounded-full">
                 {zonas.map((zona) => (
                   <button
                     key={zona.id}
@@ -131,7 +131,7 @@ export default function ZonaSelectorModal({ isOpen, onClose }: ZonaSelectorModal
         </div>
 
         {/* Footer */}
-        <div className="bg-gray-50 px-6 py-4 border-t">
+        <div className="bg-gray-50 px-4 sm:px-6 py-3 sm:py-4 border-t flex-shrink-0">
           <div className="flex items-center justify-center space-x-2 text-xs text-gray-500">
             <MapPin size={14} />
             <span>La zona seleccionada determinará los productos disponibles</span>
