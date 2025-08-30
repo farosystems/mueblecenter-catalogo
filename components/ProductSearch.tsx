@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Search, X, Package } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Product } from '@/lib/products'
 import { getProductsByZona, getPlanesProducto, calcularCuota } from '@/lib/supabase-products'
 import { formatearPrecio } from '@/lib/supabase-products'
@@ -21,6 +22,7 @@ export default function ProductSearch({ className = '' }: ProductSearchProps) {
   const searchRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const { zonaSeleccionada } = useZonaContext()
+  const router = useRouter()
 
   // Cargar productos al montar el componente y cuando cambie la zona
   useEffect(() => {
@@ -92,8 +94,8 @@ export default function ProductSearch({ className = '' }: ProductSearchProps) {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchTerm.trim()) {
-      // Redirigir a la página de búsqueda global con el término
-      window.location.href = `/buscar?q=${encodeURIComponent(searchTerm)}`
+      // Usar router de Next.js en lugar de window.location para mantener el estado
+      router.push(`/buscar?q=${encodeURIComponent(searchTerm)}`)
     }
   }
 
