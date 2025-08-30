@@ -21,7 +21,7 @@ export default function Footer() {
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
               <img 
-                src="/logo.png" 
+                src="/LOGO BLANCO.png" 
                 alt="MUNDO CUOTAS" 
                 className="h-20 w-auto"
               />

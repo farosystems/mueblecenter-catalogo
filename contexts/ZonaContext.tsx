@@ -20,30 +20,22 @@ export function ZonaProvider({ children }: ZonaProviderProps) {
   const [zonaSeleccionada, setZonaSeleccionadaState] = useState<Zona | null>(null)
   const [isZonaSelected, setIsZonaSelected] = useState(false)
 
-  // Cargar zona del localStorage al iniciar
+  // No cargar zona del localStorage - siempre pedir selección
   useEffect(() => {
-    const zonaGuardada = localStorage.getItem('zona_seleccionada')
-    if (zonaGuardada) {
-      try {
-        const zona = JSON.parse(zonaGuardada)
-        setZonaSeleccionadaState(zona)
-        setIsZonaSelected(true)
-      } catch (error) {
-        console.error('Error al cargar zona del localStorage:', error)
-        localStorage.removeItem('zona_seleccionada')
-      }
-    }
+    // Limpiar cualquier zona guardada previamente
+    localStorage.removeItem('zona_seleccionada')
   }, [])
 
   const setZonaSeleccionada = (zona: Zona | null) => {
     setZonaSeleccionadaState(zona)
     setIsZonaSelected(!!zona)
     
-    if (zona) {
-      localStorage.setItem('zona_seleccionada', JSON.stringify(zona))
-    } else {
-      localStorage.removeItem('zona_seleccionada')
-    }
+    // No guardar en localStorage - la zona solo durará la sesión actual
+    // if (zona) {
+    //   localStorage.setItem('zona_seleccionada', JSON.stringify(zona))
+    // } else {
+    //   localStorage.removeItem('zona_seleccionada')
+    // }
   }
 
   const clearZona = () => {
