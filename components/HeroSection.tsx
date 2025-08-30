@@ -60,22 +60,22 @@ export default function HeroSection() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className={`text-center transition-all duration-1000 ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}>
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-7xl lg:text-8xl font-bold mb-8 leading-tight">
             Bienvenidos a{" "}
-            <span className="inline-block min-w-[400px] md:min-w-[600px] lg:min-w-[800px]">
+            <span className="inline-block min-w-[200px] sm:min-w-[300px] md:min-w-[600px] lg:min-w-[800px]">
               <TypewriterText />
             </span>
           </h1>
           <p
-            className={`text-xl md:text-2xl mb-8 max-w-3xl mx-auto transition-all duration-1000 delay-500 ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}
+            className={`text-lg sm:text-xl md:text-2xl mb-8 max-w-3xl mx-auto px-2 transition-all duration-1000 delay-500 ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}
           >
             Tu tienda de electrodomésticos de confianza con los mejores planes de financiación
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 md:gap-12 items-center mt-16 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-12 items-center mt-16 max-w-4xl mx-auto px-4">
           <div className={`transition-all duration-1000 delay-700 ${isVisible ? "animate-fade-in-left" : "opacity-0"}`}>
-            <div className="bg-white/95 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl shadow-2xl border border-white/30 hover:shadow-3xl transition-all duration-300 max-w-sm sm:max-w-md mx-auto">
+            <div className="bg-white/95 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl shadow-2xl border border-white/30 hover:shadow-3xl transition-all duration-300 w-full max-w-xs sm:max-w-sm mx-auto">
               <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6" style={{color: '#FF2F12'}}>¿Quiénes Somos?</h2>
               <p className="text-sm sm:text-base md:text-lg mb-3 sm:mb-4 leading-relaxed text-gray-800">
                 En MueblesCenter somos una empresa especializada en la venta de electrodomésticos con más de 10 años de
@@ -91,7 +91,7 @@ export default function HeroSection() {
           <div
             className={`transition-all duration-1000 delay-1000 ${isVisible ? "animate-fade-in-right" : "opacity-0"}`}
           >
-            <div className="bg-white/95 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl shadow-2xl border border-white/30 hover:shadow-3xl transition-all duration-300 max-w-sm sm:max-w-md mx-auto">
+            <div className="bg-white/95 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl shadow-2xl border border-white/30 hover:shadow-3xl transition-all duration-300 w-full max-w-xs sm:max-w-sm mx-auto">
               <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6" style={{color: '#FF2F12'}}>¿Qué Hacemos?</h2>
               <ul className="text-sm sm:text-base md:text-lg space-y-3 sm:space-y-4">
                 {[
