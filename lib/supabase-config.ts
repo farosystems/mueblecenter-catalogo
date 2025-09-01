@@ -264,7 +264,7 @@ export async function getStockProductoEnZona(productoId: number, zonaId: number)
       .eq('fk_id_producto', productoId)
       .eq('fk_id_zona', zonaId)
       .eq('activo', true)
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error('Error al obtener stock del producto en zona:', error)

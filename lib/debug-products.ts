@@ -158,7 +158,7 @@ export async function debugMissingProducts() {
 
     // Verificar cuáles tienen relaciones válidas
     const { data: categorias, error: catError } = await supabase
-      .from('categoria')
+      .from('categorias')
       .select('id')
 
     const { data: marcas, error: marError } = await supabase

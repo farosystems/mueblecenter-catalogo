@@ -226,7 +226,7 @@ export async function getProducts(): Promise<Product[]> {
 
     // Obtener categorías y marcas por separado para hacer el mapeo manualmente
     const { data: categories, error: categoriesError } = await supabase
-      .from('categoria')
+      .from('categorias')
       .select('*')
 
     const { data: brands, error: brandsError } = await supabase
@@ -288,7 +288,7 @@ export async function getFeaturedProducts(): Promise<Product[]> {
 
     // Obtener categorías y marcas por separado
     const { data: categories, error: categoriesError } = await supabase
-      .from('categoria')
+      .from('categorias')
       .select('*')
 
     const { data: brands, error: brandsError } = await supabase
@@ -349,7 +349,7 @@ export async function getProductsByCategory(categoryId: number): Promise<Product
 
     // Obtener categorías y marcas por separado
     const { data: categories, error: categoriesError } = await supabase
-      .from('categoria')
+      .from('categorias')
       .select('*')
 
     const { data: brands, error: brandsError } = await supabase
@@ -410,7 +410,7 @@ export async function getProductsByBrand(brandId: number): Promise<Product[]> {
 
     // Obtener categorías y marcas por separado
     const { data: categories, error: categoriesError } = await supabase
-      .from('categoria')
+      .from('categorias')
       .select('*')
 
     const { data: brands, error: brandsError } = await supabase
@@ -469,7 +469,7 @@ export async function getProductById(id: string): Promise<Product | null> {
 
     // Obtener categorías y marcas por separado
     const { data: categories, error: categoriesError } = await supabase
-      .from('categoria')
+      .from('categorias')
       .select('*')
 
     const { data: brands, error: brandsError } = await supabase
@@ -534,7 +534,7 @@ export async function getCategories(): Promise<Categoria[]> {
   try {
     console.log('🔍 getCategories: Intentando obtener categorías...')
     const { data, error } = await supabase
-      .from('categoria')
+      .from('categorias')
       .select('*')
       .order('descripcion', { ascending: true })
 

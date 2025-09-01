@@ -14,6 +14,8 @@ import AddToListButton from "@/components/AddToListButton"
 import FormattedProductDescription from "@/components/FormattedProductDescription"
 import { useProducts } from "@/hooks/use-products"
 import { getProductById } from "@/lib/supabase-products"
+import { useZonaContext } from "@/contexts/ZonaContext"
+import { getStockProductoEnZona } from "@/lib/supabase-config"
 
 interface ProductPageClientProps {
   params: Promise<{
@@ -30,6 +32,7 @@ export default function ProductPageClient({ params }: ProductPageClientProps) {
   const [error, setError] = useState<string | null>(null)
 
   const { products, categories } = useProducts()
+  const { zonaSeleccionada } = useZonaContext()
 
   // Encontrar la categoría por slug
   const categoria = categories.find(cat => {
@@ -67,6 +70,18 @@ export default function ProductPageClient({ params }: ProductPageClientProps) {
           return
         }
 
+        // Si hay una zona seleccionada, verificar stock disponible
+        if (zonaSeleccionada) {
+          const stockData = await getStockProductoEnZona(productData.id, zonaSeleccionada.id)
+          
+          // Si no hay registro de stock o el stock es 0, redirigir al home
+          if (!stockData || stockData.stock <= 0) {
+            console.log('🚫 Producto sin stock en zona seleccionada, redirigiendo al home...')
+            router.push('/')
+            return
+          }
+        }
+
         setProduct(productData)
       } catch (err) {
         setError('Error al cargar el producto')
@@ -79,7 +94,7 @@ export default function ProductPageClient({ params }: ProductPageClientProps) {
     if (categoria) {
       loadProduct()
     }
-  }, [resolvedParams.id, categoria])
+  }, [resolvedParams.id, categoria, zonaSeleccionada, router])
 
   const handleBackToCategory = () => {
     router.push(`/${resolvedParams.categoria}`)
