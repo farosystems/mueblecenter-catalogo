@@ -109,8 +109,8 @@ export default function CategoriesCarousel() {
                             href={`/${slug}`}
                             className="group"
                           >
-                            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border-2 border-green-200 hover:border-green-400 transform hover:scale-105 group-hover:bg-green-50">
-                              <div className="flex flex-col items-center text-center">
+                            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border-2 border-green-200 hover:border-green-400 transform hover:scale-105 group-hover:bg-green-50 min-h-[200px]">
+                              <div className="flex flex-col items-center text-center h-full justify-between">
                                 {/* Logo de la categoría */}
                                 <div className="w-16 h-16 mb-4 flex items-center justify-center">
                                   {category.logo ? (
@@ -130,7 +130,7 @@ export default function CategoriesCarousel() {
                                   />
                                 </div>
                                 
-                                <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors duration-300 line-clamp-2">
+                                <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors duration-300 line-clamp-2 min-h-[3rem] flex items-center justify-center text-center leading-tight break-words">
                                   {category.descripcion}
                                 </h3>
                                 

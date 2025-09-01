@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: ProductoPageProps): Promise<M
         type: 'website',
         locale: 'es_AR',
         url: `https://catalogo-mundocuotas.vercel.app/${resolvedParams.categoria}/${resolvedParams.id}`,
-        siteName: 'TuCatalogo',
+        siteName: 'MueblesCenter',
         title,
         description,
         images: [
