@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ShoppingListProvider } from "@/hooks/use-shopping-list"
 import { ZonaProvider } from "@/contexts/ZonaContext"
+import { WhatsAppSuccessProvider } from "@/contexts/WhatsAppSuccessContext"
 import GlobalZonaModal from "@/components/GlobalZonaModal"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -51,8 +52,10 @@ export default function RootLayout({
       <body className={inter.className}>
         <ZonaProvider>
           <ShoppingListProvider>
-            {children}
-            <GlobalZonaModal />
+            <WhatsAppSuccessProvider>
+              {children}
+              <GlobalZonaModal />
+            </WhatsAppSuccessProvider>
           </ShoppingListProvider>
         </ZonaProvider>
       </body>

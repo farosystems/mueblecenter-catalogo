@@ -3,15 +3,15 @@
 import Link from "next/link"
 import { Menu, ShoppingBag, X, Home, Star, MapPin, RefreshCw, ChevronRight } from "lucide-react"
 import ProductSearch from "./ProductSearch"
-import CategoriesDropdown from "./CategoriesDropdown"
+import PresentacionesDropdown from "./PresentacionesDropdown"
 import ShoppingListModal from "./ShoppingListModal"
 import { useState, useEffect } from "react"
 import { useShoppingList } from "@/hooks/use-shopping-list"
 import { useZonaContext } from "@/contexts/ZonaContext"
 
 export default function GlobalAppBar() {
-  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false)
-  const [isMobileCategoriesOpen, setIsMobileCategoriesOpen] = useState(false)
+  const [isPresentacionesOpen, setIsPresentacionesOpen] = useState(false)
+  const [isMobilePresentacionesOpen, setIsMobilePresentacionesOpen] = useState(false)
   const [isShoppingListOpen, setIsShoppingListOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { itemCount } = useShoppingList()
@@ -106,21 +106,21 @@ export default function GlobalAppBar() {
 
           {/* Navegación desktop */}
           <div className="hidden lg:flex items-center justify-between py-3 border-t border-green-200 px-6">
-            {/* Categorías */}
+            {/* Catálogo */}
             <div 
               className="relative"
-              onMouseEnter={() => setIsCategoriesOpen(true)}
-              onMouseLeave={() => setIsCategoriesOpen(false)}
+              onMouseEnter={() => setIsPresentacionesOpen(true)}
+              onMouseLeave={() => setIsPresentacionesOpen(false)}
             >
               <button className="text-green-700 hover:text-green-900 transition-colors duration-300 font-bold text-lg flex items-center">
                 <Menu className="mr-2 size-6" />
-                Categorías
+                Catálogo
               </button>
               
               <div className="absolute top-full left-0 pt-2">
-                <CategoriesDropdown 
-                  isOpen={isCategoriesOpen}
-                  onClose={() => setIsCategoriesOpen(false)}
+                <PresentacionesDropdown 
+                  isOpen={isPresentacionesOpen}
+                  onClose={() => setIsPresentacionesOpen(false)}
                   isMobile={false}
                 />
               </div>
@@ -219,17 +219,17 @@ export default function GlobalAppBar() {
                 </button>
               )}
               
-              {/* Categorías móvil */}
+              {/* Catálogo móvil */}
               <button
                 onClick={() => {
-                  setIsMobileCategoriesOpen(true)
+                  setIsMobilePresentacionesOpen(true)
                   setIsMobileMenuOpen(false)
                 }}
                 className="flex items-center justify-between w-full px-4 py-3 text-green-700 hover:bg-green-100 rounded-lg transition-colors font-medium"
               >
                 <div className="flex items-center">
                   <Menu className="mr-3" size={20} />
-                  Categorías
+                  Catálogo
                 </div>
                 <ChevronRight size={20} />
               </button>
@@ -244,10 +244,10 @@ export default function GlobalAppBar() {
         onClose={() => setIsShoppingListOpen(false)}
       />
       
-      {/* Modal de Categorías móvil */}
-      <CategoriesDropdown 
-        isOpen={isMobileCategoriesOpen}
-        onClose={() => setIsMobileCategoriesOpen(false)}
+      {/* Modal de Catálogo móvil */}
+      <PresentacionesDropdown 
+        isOpen={isMobilePresentacionesOpen}
+        onClose={() => setIsMobilePresentacionesOpen(false)}
         isMobile={true}
       />
     </>

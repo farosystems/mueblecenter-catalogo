@@ -3,6 +3,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Ocultar scrollbar pero mantener funcionalidad */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE y Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;  /* Safari y Chrome */
+}
+
 /* Colores personalizados */
 .bg-green-gradient {
   background: linear-gradient(to right, #1F632A, #8FD527, #1F632A);
@@ -432,4 +442,13 @@ html {
 
 .animate-slide-in-left {
   animation: slide-in-left 0.5s ease-out forwards;
+}
+
+@keyframes progress {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
 }

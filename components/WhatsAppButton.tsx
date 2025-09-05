@@ -6,17 +6,20 @@ import type { Product } from "@/lib/products"
 import { useConfiguracion } from "@/hooks/use-configuracion"
 import { useZonaContext } from "@/contexts/ZonaContext"
 import { getTelefonoPorZona } from "@/lib/supabase-config"
+import { useWhatsAppSuccess } from "@/contexts/WhatsAppSuccessContext"
 
 interface WhatsAppButtonProps {
   product: Product
+  onSuccess?: () => void
 }
 
-export default function WhatsAppButton({ product }: WhatsAppButtonProps) {
+export default function WhatsAppButton({ product, onSuccess }: WhatsAppButtonProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [telefonoZona, setTelefonoZona] = useState<string | null>(null)
   const [loadingTelefono, setLoadingTelefono] = useState(false)
   const { telefono, loading: configLoading, error: configError } = useConfiguracion()
   const { zonaSeleccionada } = useZonaContext()
+  const { showSuccess } = useWhatsAppSuccess()
   
   // Cargar teléfono de la zona seleccionada
   useEffect(() => {
@@ -81,21 +84,35 @@ export default function WhatsAppButton({ product }: WhatsAppButtonProps) {
   }
 
   const handleClick = () => {
-    // Usar el teléfono de la zona seleccionada o el teléfono por defecto
-    const phoneNumber = telefonoZona || telefono || "5491123365608"
-    const message = generateWhatsAppMessage(product)
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
-    
-    // Detectar si es móvil para usar el método correcto
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-    
-    if (isMobile) {
-      // En móviles, usar window.location.href para abrir la app directamente
-      window.location.href = whatsappUrl
-    } else {
-      // En desktop, usar window.open
-      window.open(whatsappUrl, '_blank')
+    // Determinar si viene de la lista de compras
+    const fromShoppingList = product.descripcion?.includes('Lista de') || false
+
+    // Ejecutar callback primero (limpiar lista si viene de shopping list)
+    if (onSuccess) {
+      onSuccess()
     }
+
+    // Mostrar modal de éxito usando el contexto global
+    showSuccess(fromShoppingList)
+
+    // Esperar un momento antes de abrir WhatsApp para que el usuario vea el modal
+    setTimeout(() => {
+      // Usar el teléfono de la zona seleccionada o el teléfono por defecto
+      const phoneNumber = telefonoZona || telefono || "5491123365608"
+      const message = generateWhatsAppMessage(product)
+      const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
+      
+      // Detectar si es móvil para usar el método correcto
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      
+      if (isMobile) {
+        // En móviles, usar window.location.href para abrir la app directamente
+        window.location.href = whatsappUrl
+      } else {
+        // En desktop, usar window.open
+        window.open(whatsappUrl, '_blank')
+      }
+    }, 500) // Esperar 500ms para que el usuario vea el modal
   }
 
   // Si está cargando, mostrar un botón deshabilitado

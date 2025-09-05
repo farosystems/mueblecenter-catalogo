@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { use } from "react"
-import { ArrowLeft, Package, CheckCircle, Star, Truck, Shield, CreditCard, Headphones } from "lucide-react"
+import { ArrowLeft, Package, CheckCircle, Star, Truck, Shield, CreditCard, Headphones, ChevronLeft, ChevronRight } from "lucide-react"
 import { useRouter } from "next/navigation"
 import GlobalAppBar from "@/components/GlobalAppBar"
 import Footer from "@/components/Footer"
@@ -18,18 +18,28 @@ import { useZonaContext } from "@/contexts/ZonaContext"
 import { getStockProductoEnZona } from "@/lib/supabase-config"
 
 interface ProductPageClientProps {
-  params: Promise<{
+  params?: Promise<{
     categoria: string
     id: string
   }>
+  productId?: string
+  categorySlug?: string
+  hierarchyType?: 'categoria' | 'presentacion' | 'linea' | 'tipo'
 }
 
-export default function ProductPageClient({ params }: ProductPageClientProps) {
-  const resolvedParams = use(params)
+export default function ProductPageClient({ 
+  params, 
+  productId, 
+  categorySlug, 
+  hierarchyType = 'categoria' 
+}: ProductPageClientProps) {
+  const resolvedParams = params ? use(params) : { categoria: categorySlug!, id: productId! }
   const router = useRouter()
   const [product, setProduct] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [currentMobileIndex, setCurrentMobileIndex] = useState(0)
+  const mobileScrollRef = useRef<HTMLDivElement>(null)
 
   const { products, categories } = useProducts()
   const { zonaSeleccionada } = useZonaContext()
@@ -42,14 +52,30 @@ export default function ProductPageClient({ params }: ProductPageClientProps) {
     return slug === resolvedParams.categoria
   })
 
-  // Productos relacionados de la misma categoría
+  // Productos relacionados según el tipo de jerarquía
   const relatedProducts = useMemo(() => {
-    if (!product || !categoria) return []
+    if (!product) return []
     
-    return products
-      .filter(p => p.fk_id_categoria === categoria.id && p.id !== product.id)
-      .slice(0, 6) // Mostrar máximo 6 productos relacionados
-  }, [products, product, categoria])
+    if (hierarchyType === 'categoria' && categoria) {
+      // Productos relacionados de la misma categoría tradicional
+      return products
+        .filter(p => p.fk_id_categoria === categoria.id && p.id !== product.id)
+        .slice(0, 6)
+    } else {
+      // Para las nuevas jerarquías, mostrar productos relacionados por tipo/línea/presentación
+      let relatedFilter = (p: any) => p.id !== product.id
+      
+      if (hierarchyType === 'tipo' && product.tipo_id) {
+        relatedFilter = (p: any) => p.tipo_id === product.tipo_id && p.id !== product.id
+      } else if (hierarchyType === 'linea' && product.linea_id) {
+        relatedFilter = (p: any) => p.linea_id === product.linea_id && p.id !== product.id
+      } else if (hierarchyType === 'presentacion' && product.presentacion_id) {
+        relatedFilter = (p: any) => p.presentacion_id === product.presentacion_id && p.id !== product.id
+      }
+      
+      return products.filter(relatedFilter).slice(0, 6)
+    }
+  }, [products, product, categoria, hierarchyType])
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -57,22 +83,31 @@ export default function ProductPageClient({ params }: ProductPageClientProps) {
         setLoading(true)
         setError(null)
         
+        console.log('🔍 Loading product with ID:', resolvedParams.id)
+        console.log('🔍 Hierarchy type:', hierarchyType)
+        console.log('🔍 Category slug:', resolvedParams.categoria)
+        
         const productData = await getProductById(resolvedParams.id)
+        
+        console.log('🔍 Product data loaded:', productData)
         
         if (!productData) {
           setError('Producto no encontrado')
           return
         }
 
-        // Verificar que el producto pertenece a la categoría correcta
-        if (productData.fk_id_categoria !== categoria?.id) {
+        // Verificar que el producto pertenece a la categoría/jerarquía correcta solo para categorías tradicionales
+        if (hierarchyType === 'categoria' && productData.fk_id_categoria !== categoria?.id) {
+          console.log('🔍 Product category validation failed')
+          console.log('🔍 Product category ID:', productData.fk_id_categoria)
+          console.log('🔍 Expected category ID:', categoria?.id)
           setError('El producto no pertenece a esta categoría')
           return
         }
 
         // Si hay una zona seleccionada, verificar stock disponible
         if (zonaSeleccionada) {
-          const stockData = await getStockProductoEnZona(productData.id, zonaSeleccionada.id)
+          const stockData = await getStockProductoEnZona(Number(productData.id), zonaSeleccionada.id)
           
           // Si no hay registro de stock o el stock es 0, redirigir al home
           if (!stockData || stockData.stock <= 0) {
@@ -91,13 +126,57 @@ export default function ProductPageClient({ params }: ProductPageClientProps) {
       }
     }
 
-    if (categoria) {
+    // Solo ejecutar si es categoría tradicional y existe la categoria, o si es nueva jerarquía
+    if (hierarchyType === 'categoria' ? categoria : true) {
       loadProduct()
     }
-  }, [resolvedParams.id, categoria, zonaSeleccionada, router])
+  }, [resolvedParams.id, categoria, hierarchyType, zonaSeleccionada, router])
 
   const handleBackToCategory = () => {
-    router.push(`/${resolvedParams.categoria}`)
+    // Siempre redirigir a presentaciones con la presentación del artículo
+    if (product?.presentacion?.nombre) {
+      const presentacionSlug = product.presentacion.nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+      router.push(`/presentaciones/${presentacionSlug}`)
+    } else {
+      // Fallback al home si no hay presentación
+      router.push('/')
+    }
+  }
+
+  // Funciones para el carrusel móvil de productos relacionados
+  const scrollToMobileIndex = (index: number) => {
+    if (mobileScrollRef.current) {
+      const scrollLeft = index * mobileScrollRef.current.offsetWidth
+      mobileScrollRef.current.scrollTo({
+        left: scrollLeft,
+        behavior: 'smooth'
+      })
+      setCurrentMobileIndex(index)
+    }
+  }
+
+  const handleMobileNext = () => {
+    if (currentMobileIndex < relatedProducts.length - 1) {
+      scrollToMobileIndex(currentMobileIndex + 1)
+    }
+  }
+
+  const handleMobilePrev = () => {
+    if (currentMobileIndex > 0) {
+      scrollToMobileIndex(currentMobileIndex - 1)
+    }
+  }
+
+  // Detectar scroll en el carrusel móvil para actualizar el índice
+  const handleMobileScroll = () => {
+    if (mobileScrollRef.current) {
+      const scrollLeft = mobileScrollRef.current.scrollLeft
+      const itemWidth = mobileScrollRef.current.offsetWidth
+      const newIndex = Math.round(scrollLeft / itemWidth)
+      if (newIndex !== currentMobileIndex && newIndex >= 0 && newIndex < relatedProducts.length) {
+        setCurrentMobileIndex(newIndex)
+      }
+    }
   }
 
   if (loading) {
@@ -128,7 +207,7 @@ export default function ProductPageClient({ params }: ProductPageClientProps) {
               onClick={handleBackToCategory}
               className="px-6 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors"
             >
-              Volver a {categoria?.descripcion}
+              Volver al inicio
             </button>
           </div>
         </div>
@@ -157,7 +236,7 @@ export default function ProductPageClient({ params }: ProductPageClientProps) {
             className="inline-flex items-center text-green-600 hover:text-green-700 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver a {categoria?.descripcion}
+            Volver al inicio
           </button>
         </div>
 
@@ -175,13 +254,43 @@ export default function ProductPageClient({ params }: ProductPageClientProps) {
 
           {/* Información del producto */}
           <div>
-            {/* Categoría y Marca */}
-            <div className="flex gap-2 mb-4">
-              <span className="text-xs text-violet-600 bg-violet-100 px-2 py-1 rounded-full uppercase">
-                {categoria?.descripcion}
-              </span>
-              {product.marca && (
-                <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full uppercase">
+            {/* Nueva jerarquía: Presentación, Línea, Tipo */}
+            <div className="flex gap-2 mb-4 flex-wrap">
+              {product.presentacion && (
+                <span className="text-xs text-white bg-green-500 px-3 py-1 rounded-full uppercase font-medium">
+                  {product.presentacion.nombre}
+                </span>
+              )}
+              {product.linea && (
+                <span className="text-xs text-white bg-blue-500 px-3 py-1 rounded-full uppercase font-medium">
+                  {product.linea.nombre}
+                </span>
+              )}
+              {product.tipo && (
+                <span className="text-xs text-white bg-purple-500 px-3 py-1 rounded-full uppercase font-medium">
+                  {product.tipo.nombre}
+                </span>
+              )}
+              
+              {/* Mostrar categoría y marca solo si no hay nueva jerarquía */}
+              {!product.presentacion && !product.linea && !product.tipo && (
+                <>
+                  {categoria && (
+                    <span className="text-xs text-violet-600 bg-violet-100 px-3 py-1 rounded-full uppercase font-medium">
+                      {categoria.descripcion}
+                    </span>
+                  )}
+                  {product.marca && (
+                    <span className="text-xs text-blue-600 bg-blue-100 px-3 py-1 rounded-full uppercase font-medium">
+                      {product.marca.descripcion}
+                    </span>
+                  )}
+                </>
+              )}
+
+              {/* Marca siempre visible si hay nueva jerarquía */}
+              {(product.presentacion || product.linea || product.tipo) && product.marca && (
+                <span className="text-xs text-gray-600 bg-gray-100 px-3 py-1 rounded-full uppercase font-medium">
                   {product.marca.descripcion}
                 </span>
               )}
@@ -275,7 +384,6 @@ export default function ProductPageClient({ params }: ProductPageClientProps) {
       
       {/* Productos relacionados - Full Width */}
       <section className="bg-featured-gradient py-16 text-white">
-        {console.log('🔍 RelatedProducts length:', relatedProducts.length)}
         {relatedProducts.length > 0 ? (
           <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-16">
             <div className="text-center mb-12">
@@ -287,12 +395,75 @@ export default function ProductPageClient({ params }: ProductPageClientProps) {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {relatedProducts.slice(0, 3).map((relatedProduct) => (
-                <div key={relatedProduct.id} className="animate-fade-in-up">
-                  <ProductCard product={relatedProduct} />
-                </div>
-              ))}
+            {/* Contador móvil */}
+            <div className="mb-8 text-center md:hidden">
+              <p className="text-green-100">
+                <span className="font-semibold text-white">{currentMobileIndex + 1}</span> de{" "}
+                <span className="font-semibold text-white">{relatedProducts.length}</span> productos relacionados
+              </p>
+            </div>
+
+            {/* Vista Desktop - Grid */}
+            <div className="hidden md:block">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {relatedProducts.slice(0, 3).map((relatedProduct) => (
+                  <div key={relatedProduct.id} className="animate-fade-in-up">
+                    <ProductCard product={relatedProduct} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Vista Móvil - Carrusel */}
+            <div className="md:hidden relative">
+              {/* Botones de navegación */}
+              <button
+                onClick={handleMobilePrev}
+                disabled={currentMobileIndex === 0}
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 bg-white/20 backdrop-blur-sm rounded-full p-2 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
+              >
+                <ChevronLeft size={24} className="text-white" />
+              </button>
+
+              <button
+                onClick={handleMobileNext}
+                disabled={currentMobileIndex === relatedProducts.length - 1}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-white/20 backdrop-blur-sm rounded-full p-2 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
+              >
+                <ChevronRight size={24} className="text-white" />
+              </button>
+
+              {/* Carrusel con scroll horizontal */}
+              <div
+                ref={mobileScrollRef}
+                onScroll={handleMobileScroll}
+                className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {relatedProducts.map((relatedProduct, index) => (
+                  <div
+                    key={relatedProduct.id}
+                    className="min-w-full snap-center px-4"
+                  >
+                    <ProductCard product={relatedProduct} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Indicadores de puntos */}
+              <div className="flex justify-center space-x-2 mt-6">
+                {relatedProducts.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => scrollToMobileIndex(index)}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      index === currentMobileIndex 
+                        ? 'bg-white scale-125' 
+                        : 'bg-white/50 hover:bg-white/70'
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
 
             {/* Botón ver más */}

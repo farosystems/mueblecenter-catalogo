@@ -64,12 +64,19 @@ export default function FinancingPlansLarge({ productoId, precio, showDebug = fa
     }
   }
 
-  // Mostrar todos los planes disponibles para este producto
-  const colores = ['bg-blue-100 text-blue-800', 'bg-green-100 text-green-800', 'bg-purple-100 text-purple-800', 'bg-orange-100 text-orange-800']
+  // Mostrar todos los planes disponibles para este producto con diferentes colores
+  const colores = [
+    'bg-blue-100 text-blue-800', 
+    'bg-green-100 text-green-800', 
+    'bg-purple-100 text-purple-800', 
+    'bg-orange-100 text-orange-800',
+    'bg-red-100 text-red-800',
+    'bg-indigo-100 text-indigo-800'
+  ]
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow-sm">
-      <h3 className="text-xl font-bold text-gray-900 mb-4">Planes de Financiación</h3>
+    <div className="bg-white rounded-lg p-4 shadow-sm">
+      <h3 className="text-lg font-bold text-gray-900 mb-3">Planes de Financiación</h3>
       
       {/* Información de debug */}
       {showDebug && (
@@ -78,7 +85,7 @@ export default function FinancingPlansLarge({ productoId, precio, showDebug = fa
         </div>
       )}
       
-      <div className="space-y-3">
+      <div className="space-y-2">
         {planes.map((plan, index) => {
           const calculo = calcularCuota(precio, plan)
           const anticipo = calcularAnticipo(precio, plan)
@@ -87,21 +94,17 @@ export default function FinancingPlansLarge({ productoId, precio, showDebug = fa
           return (
             <div
               key={plan.id}
-              className={`p-4 rounded-xl text-center font-bold text-lg ${
-                index === 0 ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+              className={`p-3 rounded-lg text-center font-bold text-base ${
+                colores[index % colores.length]
               }`}
             >
-              <div className="mb-2">
-                <div className="text-xl mb-1">
-                  {plan.cuotas} CUOTAS MENSUALES
-                </div>
-                <div className="text-lg space-y-1">
-                  <div>x ${formatearPrecio(calculo.cuota_mensual)} EF</div>
-                  <div>x ${formatearPrecio(calculo.cuota_mensual_electro)} P.ELEC</div>
+              <div className="mb-1">
+                <div className="text-lg mb-1">
+                  {plan.cuotas} CUOTAS x ${formatearPrecio(calculo.cuota_mensual)} EF
                 </div>
               </div>
               {anticipo > 0 && (
-                <div className="text-base font-semibold opacity-90 border-t pt-2 mt-2">
+                <div className="text-sm font-semibold opacity-90 border-t pt-1 mt-1">
                   Anticipo: ${formatearPrecio(anticipo)}
                 </div>
               )}

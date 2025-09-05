@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { Product, Categoria, Marca, PlanFinanciacion, ProductoPlan } from './products'
+import { Product, Categoria, Marca, PlanFinanciacion, ProductoPlan, Presentacion, Linea, Tipo } from './products'
 import { getProductosConStockEnZona } from './supabase-config'
 
 // Función para formatear números sin decimales
@@ -664,3 +664,289 @@ export async function getProductsByBrandAndZona(brandId: number, zonaId: number 
   const productos = await getProductsByBrand(brandId)
   return filtrarProductosPorZona(productos, zonaId)
 } 
+
+// FUNCIONES PARA PRESENTACIONES, LÍNEAS Y TIPOS
+
+// Obtener todas las presentaciones activas que tengan líneas asociadas
+export async function getPresentaciones(): Promise<Presentacion[]> {
+  try {
+    console.log('🔍 getPresentaciones: Intentando obtener presentaciones...')
+    
+    // Solo obtener presentaciones que tengan líneas activas asociadas
+    const { data, error } = await supabase
+      .from('presentaciones')
+      .select(`
+        id,
+        nombre,
+        descripcion,
+        activo,
+        created_at,
+        updated_at,
+        lineas!inner(id)
+      `)
+      .eq('activo', true)
+      .eq('lineas.activo', true)
+      .order('nombre', { ascending: true })
+
+    console.log('🔍 getPresentaciones: Respuesta de Supabase:', { data, error })
+
+    if (error) {
+      console.error('❌ Error fetching presentaciones:', error)
+      return []
+    }
+
+    // Filtrar presentaciones duplicadas (debido al inner join)
+    const presentacionesUnicas = data?.reduce((acc: Presentacion[], current: any) => {
+      if (!acc.find(p => p.id === current.id)) {
+        acc.push({
+          id: current.id,
+          nombre: current.nombre,
+          descripcion: current.descripcion,
+          activo: current.activo,
+          created_at: current.created_at,
+          updated_at: current.updated_at
+        })
+      }
+      return acc
+    }, []) || []
+
+    console.log('✅ getPresentaciones: Datos obtenidos:', presentacionesUnicas)
+    return presentacionesUnicas
+  } catch (error) {
+    console.error('❌ Error fetching presentaciones:', error)
+    return []
+  }
+}
+
+// Obtener líneas por presentación que tengan tipos asociados
+export async function getLineasByPresentacion(presentacionId: string): Promise<Linea[]> {
+  try {
+    console.log('🔍 getLineasByPresentacion: Buscando líneas para presentación:', presentacionId)
+    
+    // Solo obtener líneas que tengan tipos activos asociados
+    const { data, error } = await supabase
+      .from('lineas')
+      .select(`
+        id,
+        nombre,
+        descripcion,
+        presentacion_id,
+        activo,
+        created_at,
+        updated_at,
+        tipos!inner(id)
+      `)
+      .eq('presentacion_id', presentacionId)
+      .eq('activo', true)
+      .eq('tipos.activo', true)
+      .order('nombre', { ascending: true })
+
+    if (error) {
+      console.error('❌ Error fetching líneas:', error)
+      return []
+    }
+
+    // Filtrar líneas duplicadas (debido al inner join)
+    const lineasUnicas = data?.reduce((acc: Linea[], current: any) => {
+      if (!acc.find(l => l.id === current.id)) {
+        acc.push({
+          id: current.id,
+          nombre: current.nombre,
+          descripcion: current.descripcion,
+          presentacion_id: current.presentacion_id,
+          activo: current.activo,
+          created_at: current.created_at,
+          updated_at: current.updated_at
+        })
+      }
+      return acc
+    }, []) || []
+
+    console.log('✅ getLineasByPresentacion: Datos obtenidos:', lineasUnicas)
+    return lineasUnicas
+  } catch (error) {
+    console.error('❌ Error fetching líneas:', error)
+    return []
+  }
+}
+
+// Obtener tipos por línea
+export async function getTiposByLinea(lineaId: string): Promise<Tipo[]> {
+  try {
+    console.log('🔍 getTiposByLinea: Buscando tipos para línea:', lineaId)
+    
+    const { data, error } = await supabase
+      .from('tipos')
+      .select('*')
+      .eq('linea_id', lineaId)
+      .eq('activo', true)
+      .order('nombre', { ascending: true })
+
+    if (error) {
+      console.error('❌ Error fetching tipos:', error)
+      return []
+    }
+
+    console.log('✅ getTiposByLinea: Datos obtenidos:', data)
+    return data || []
+  } catch (error) {
+    console.error('❌ Error fetching tipos:', error)
+    return []
+  }
+}
+
+// Obtener productos por presentación, línea y tipo
+export async function getProductsByHierarchy(
+  presentacionId?: string, 
+  lineaId?: string, 
+  tipoId?: string,
+  zonaId: number | null = null
+): Promise<Product[]> {
+  try {
+    console.log('🔍 getProductsByHierarchy:', { presentacionId, lineaId, tipoId, zonaId })
+    
+    let query = supabase
+      .from('productos')
+      .select('*')
+      .gt('precio', 0)
+      .eq('activo', true)
+
+    // Aplicar filtros según los parámetros
+    if (presentacionId) {
+      query = query.eq('presentacion_id', presentacionId)
+    }
+    if (lineaId) {
+      query = query.eq('linea_id', lineaId)
+    }
+    if (tipoId) {
+      query = query.eq('tipo_id', tipoId)
+    }
+
+    const { data, error } = await query
+      .order('destacado', { ascending: false })
+      .order('descripcion', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching products by hierarchy:', error)
+      return []
+    }
+
+    // Obtener categorías y marcas por separado
+    const { data: categories } = await supabase
+      .from('categorias')
+      .select('*')
+
+    const { data: brands } = await supabase
+      .from('marcas')
+      .select('*')
+
+    const { data: presentaciones } = await supabase
+      .from('presentaciones')
+      .select('*')
+
+    const { data: lineas } = await supabase
+      .from('lineas')
+      .select('*')
+
+    const { data: tipos } = await supabase
+      .from('tipos')
+      .select('*')
+
+    // Crear mapas para búsqueda rápida
+    const categoriesMap = new Map(categories?.map(cat => [cat.id, cat]) || [])
+    const brandsMap = new Map(brands?.map(brand => [brand.id, brand]) || [])
+    const presentacionesMap = new Map(presentaciones?.map(p => [p.id, p]) || [])
+    const lineasMap = new Map(lineas?.map(l => [l.id, l]) || [])
+    const tiposMap = new Map(tipos?.map(t => [t.id, t]) || [])
+
+    // Transformar datos
+    const transformedData = data?.map(product => {
+      const categoria = categoriesMap.get(product.fk_id_categoria) || 
+                       { id: product.fk_id_categoria || 1, descripcion: `Categoría ${product.fk_id_categoria || 1}` }
+      
+      const marca = brandsMap.get(product.fk_id_marca) || 
+                   { id: product.fk_id_marca || 1, descripcion: `Marca ${product.fk_id_marca || 1}` }
+
+      const presentacion = product.presentacion_id ? presentacionesMap.get(product.presentacion_id) : undefined
+      const linea = product.linea_id ? lineasMap.get(product.linea_id) : undefined
+      const tipo = product.tipo_id ? tiposMap.get(product.tipo_id) : undefined
+
+      return {
+        ...product,
+        fk_id_categoria: product.fk_id_categoria || 1,
+        fk_id_marca: product.fk_id_marca || 1,
+        categoria,
+        marca,
+        presentacion,
+        linea,
+        tipo
+      }
+    }) || []
+
+    // Filtrar por zona si es necesario
+    return filtrarProductosPorZona(transformedData, zonaId)
+  } catch (error) {
+    console.error('Error fetching products by hierarchy:', error)
+    return []
+  }
+}
+
+// Obtener todas las líneas activas
+export async function getAllLineas(): Promise<Linea[]> {
+  try {
+    const { data, error } = await supabase
+      .from('lineas')
+      .select(`
+        *,
+        presentaciones(*)
+      `)
+      .eq('activo', true)
+      .order('nombre', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching all líneas:', error)
+      return []
+    }
+
+    return data?.map(linea => ({
+      ...linea,
+      presentacion: linea.presentaciones
+    })) || []
+  } catch (error) {
+    console.error('Error fetching all líneas:', error)
+    return []
+  }
+}
+
+// Obtener todos los tipos activos
+export async function getAllTipos(): Promise<Tipo[]> {
+  try {
+    const { data, error } = await supabase
+      .from('tipos')
+      .select(`
+        *,
+        lineas(
+          *,
+          presentaciones(*)
+        )
+      `)
+      .eq('activo', true)
+      .order('nombre', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching all tipos:', error)
+      return []
+    }
+
+    return data?.map(tipo => ({
+      ...tipo,
+      linea: tipo.lineas ? {
+        ...tipo.lineas,
+        presentacion: tipo.lineas.presentaciones
+      } : undefined
+    })) || []
+  } catch (error) {
+    console.error('Error fetching all tipos:', error)
+    return []
+  }
+}

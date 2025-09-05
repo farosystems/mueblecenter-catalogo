@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { ChevronLeft, ChevronRight, Package } from "lucide-react"
 import Link from "next/link"
 import { getCategories } from "@/lib/supabase-products"
@@ -11,8 +11,10 @@ const CATEGORIES_PER_SLIDE = 5
 export default function CategoriesCarousel() {
   const [categories, setCategories] = useState<Categoria[]>([])
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [currentMobileIndex, setCurrentMobileIndex] = useState(0)
   const [loading, setLoading] = useState(true)
   const [isVisible, setIsVisible] = useState(false)
+  const mobileScrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setIsVisible(true)
@@ -46,6 +48,41 @@ export default function CategoriesCarousel() {
   const getCurrentCategories = () => {
     const start = currentSlide * CATEGORIES_PER_SLIDE
     return categories.slice(start, start + CATEGORIES_PER_SLIDE)
+  }
+
+  // Funciones para el carrusel móvil
+  const scrollToMobileIndex = (index: number) => {
+    if (mobileScrollRef.current) {
+      const scrollLeft = index * mobileScrollRef.current.offsetWidth
+      mobileScrollRef.current.scrollTo({
+        left: scrollLeft,
+        behavior: 'smooth'
+      })
+      setCurrentMobileIndex(index)
+    }
+  }
+
+  const handleMobileNext = () => {
+    if (currentMobileIndex < categories.length - 1) {
+      scrollToMobileIndex(currentMobileIndex + 1)
+    }
+  }
+
+  const handleMobilePrev = () => {
+    if (currentMobileIndex > 0) {
+      scrollToMobileIndex(currentMobileIndex - 1)
+    }
+  }
+
+  const handleMobileScroll = () => {
+    if (mobileScrollRef.current) {
+      const scrollLeft = mobileScrollRef.current.scrollLeft
+      const itemWidth = mobileScrollRef.current.offsetWidth
+      const newIndex = Math.round(scrollLeft / itemWidth)
+      if (newIndex !== currentMobileIndex && newIndex >= 0 && newIndex < categories.length) {
+        setCurrentMobileIndex(newIndex)
+      }
+    }
   }
 
   if (loading) {
@@ -83,8 +120,16 @@ export default function CategoriesCarousel() {
         </div>
 
         <div className="relative">
-          {/* Carrusel de categorías */}
-          <div className={`overflow-hidden transition-all duration-1000 delay-300 ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}>
+          {/* Contador móvil */}
+          <div className="mb-8 text-center md:hidden">
+            <p className="text-gray-600">
+              <span className="font-semibold text-gray-900">{currentMobileIndex + 1}</span> de{" "}
+              <span className="font-semibold text-gray-900">{categories.length}</span> categorías
+            </p>
+          </div>
+
+          {/* Vista Desktop - Grid con carrusel tradicional */}
+          <div className={`hidden md:block overflow-hidden transition-all duration-1000 delay-300 ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}>
             <div 
               className="flex transition-transform duration-500 ease-in-out"
               style={{ transform: `translateX(-${currentSlide * 100}%)` }}
@@ -97,8 +142,8 @@ export default function CategoriesCarousel() {
                 
                 return (
                   <div key={slideIndex} className="w-full flex-shrink-0">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-                      {slideCategories.map((category, index) => {
+                    <div className="grid grid-cols-5 gap-6">
+                      {slideCategories.map((category) => {
                         const slug = category.descripcion?.toLowerCase()
                           .replace(/[^a-z0-9]+/g, '-')
                           .replace(/^-+|-+$/g, '')
@@ -151,28 +196,119 @@ export default function CategoriesCarousel() {
             </div>
           </div>
 
-          {/* Botones de navegación */}
+          {/* Vista Móvil - Carrusel horizontal con swipe */}
+          <div className={`md:hidden relative transition-all duration-1000 delay-300 ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}>
+            {/* Botones de navegación */}
+            <button
+              onClick={handleMobilePrev}
+              disabled={currentMobileIndex === 0}
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm rounded-full p-2 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity shadow-lg"
+            >
+              <ChevronLeft size={24} className="text-green-600" />
+            </button>
+
+            <button
+              onClick={handleMobileNext}
+              disabled={currentMobileIndex === categories.length - 1}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm rounded-full p-2 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity shadow-lg"
+            >
+              <ChevronRight size={24} className="text-green-600" />
+            </button>
+
+            {/* Carrusel con scroll horizontal */}
+            <div
+              ref={mobileScrollRef}
+              onScroll={handleMobileScroll}
+              className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {categories.map((category) => {
+                const slug = category.descripcion?.toLowerCase()
+                  .replace(/[^a-z0-9]+/g, '-')
+                  .replace(/^-+|-+$/g, '')
+                
+                return (
+                  <div
+                    key={category.id}
+                    className="min-w-full snap-center px-4"
+                  >
+                    <Link href={`/${slug}`} className="group block">
+                      <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border-2 border-green-200 hover:border-green-400 group-hover:bg-green-50 min-h-[180px]">
+                        <div className="flex flex-col items-center text-center h-full justify-between">
+                          {/* Logo de la categoría */}
+                          <div className="w-12 h-12 mb-3 flex items-center justify-center">
+                            {category.logo ? (
+                              <img
+                                src={category.logo}
+                                alt={category.descripcion}
+                                className="w-full h-full object-contain"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement
+                                  target.style.display = 'none'
+                                  target.nextElementSibling?.classList.remove('hidden')
+                                }}
+                              />
+                            ) : null}
+                            <Package 
+                              className={`w-10 h-10 text-green-600 ${category.logo ? 'hidden' : ''}`} 
+                            />
+                          </div>
+                          
+                          <h3 className="text-base font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors duration-300 line-clamp-2 text-center leading-tight break-words">
+                            {category.descripcion}
+                          </h3>
+                          
+                          <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium">
+                              Ver productos
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Indicadores de puntos para móvil */}
+            <div className="flex justify-center space-x-2 mt-6">
+              {categories.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => scrollToMobileIndex(index)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    index === currentMobileIndex 
+                      ? 'bg-green-600 scale-125' 
+                      : 'bg-gray-300 hover:bg-green-400'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Botones de navegación desktop */}
           {totalSlides > 1 && (
             <>
               <button
                 onClick={prevSlide}
-                className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 bg-white shadow-lg rounded-full p-3 hover:bg-green-50 hover:shadow-xl transition-all duration-300 border border-green-200"
+                className="hidden md:block absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 bg-white shadow-lg rounded-full p-3 hover:bg-green-50 hover:shadow-xl transition-all duration-300 border border-green-200"
               >
                 <ChevronLeft className="w-6 h-6 text-green-600" />
               </button>
               
               <button
                 onClick={nextSlide}
-                className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 bg-white shadow-lg rounded-full p-3 hover:bg-green-50 hover:shadow-xl transition-all duration-300 border border-green-200"
+                className="hidden md:block absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 bg-white shadow-lg rounded-full p-3 hover:bg-green-50 hover:shadow-xl transition-all duration-300 border border-green-200"
               >
                 <ChevronRight className="w-6 h-6 text-green-600" />
               </button>
             </>
           )}
 
-          {/* Indicadores de slide */}
+          {/* Indicadores de slide desktop */}
           {totalSlides > 1 && (
-            <div className="flex justify-center mt-8 space-x-2">
+            <div className="hidden md:flex justify-center mt-8 space-x-2">
               {Array.from({ length: totalSlides }).map((_, index) => (
                 <button
                   key={index}

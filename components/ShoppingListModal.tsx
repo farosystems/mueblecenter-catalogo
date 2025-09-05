@@ -48,6 +48,12 @@ export default function ShoppingListModal({ isOpen, onClose }: ShoppingListModal
     clearList()
   }
 
+  const handleWhatsAppSuccess = () => {
+    // Limpiar la lista y cerrar el modal
+    clearList()
+    onClose()
+  }
+
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm">      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
         {/* Header */}
@@ -138,7 +144,7 @@ export default function ShoppingListModal({ isOpen, onClose }: ShoppingListModal
                 Limpiar Lista
               </button>
                              <div className="flex-1">
-                 <WhatsAppButton product={virtualProduct} />
+                 <WhatsAppButton product={virtualProduct} onSuccess={handleWhatsAppSuccess} />
                </div>
             </div>
           </div>
