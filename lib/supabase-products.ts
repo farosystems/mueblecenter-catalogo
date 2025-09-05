@@ -679,6 +679,7 @@ export async function getPresentaciones(): Promise<Presentacion[]> {
         id,
         nombre,
         descripcion,
+        imagen,
         activo,
         created_at,
         updated_at,
@@ -702,6 +703,7 @@ export async function getPresentaciones(): Promise<Presentacion[]> {
           id: current.id,
           nombre: current.nombre,
           descripcion: current.descripcion,
+          imagen: current.imagen,
           activo: current.activo,
           created_at: current.created_at,
           updated_at: current.updated_at

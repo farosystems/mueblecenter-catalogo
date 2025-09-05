@@ -9,6 +9,7 @@ export interface Presentacion {
   id: string
   nombre: string
   descripcion?: string
+  imagen?: string
   activo: boolean
   created_at: string
   updated_at: string

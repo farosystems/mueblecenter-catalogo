@@ -3,13 +3,13 @@
 import { useState, useEffect, useRef } from "react"
 import { ChevronLeft, ChevronRight, Package } from "lucide-react"
 import Link from "next/link"
-import { getCategories } from "@/lib/supabase-products"
-import { Categoria } from "@/lib/products"
+import { getPresentaciones } from "@/lib/supabase-products"
+import { Presentacion } from "@/lib/products"
 
 const CATEGORIES_PER_SLIDE = 5
 
 export default function CategoriesCarousel() {
-  const [categories, setCategories] = useState<Categoria[]>([])
+  const [presentaciones, setPresentaciones] = useState<Presentacion[]>([])
   const [currentSlide, setCurrentSlide] = useState(0)
   const [currentMobileIndex, setCurrentMobileIndex] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -21,21 +21,21 @@ export default function CategoriesCarousel() {
   }, [])
 
   useEffect(() => {
-    const loadCategories = async () => {
+    const loadPresentaciones = async () => {
       try {
-        const categoriesData = await getCategories()
-        setCategories(categoriesData)
+        const presentacionesData = await getPresentaciones()
+        setPresentaciones(presentacionesData)
       } catch (error) {
-        console.error('Error loading categories:', error)
+        console.error('Error loading presentaciones:', error)
       } finally {
         setLoading(false)
       }
     }
     
-    loadCategories()
+    loadPresentaciones()
   }, [])
 
-  const totalSlides = Math.ceil(categories.length / CATEGORIES_PER_SLIDE)
+  const totalSlides = Math.ceil(presentaciones.length / CATEGORIES_PER_SLIDE)
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % totalSlides)
@@ -45,9 +45,9 @@ export default function CategoriesCarousel() {
     setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides)
   }
 
-  const getCurrentCategories = () => {
+  const getCurrentPresentaciones = () => {
     const start = currentSlide * CATEGORIES_PER_SLIDE
-    return categories.slice(start, start + CATEGORIES_PER_SLIDE)
+    return presentaciones.slice(start, start + CATEGORIES_PER_SLIDE)
   }
 
   // Funciones para el carrusel móvil
@@ -63,7 +63,7 @@ export default function CategoriesCarousel() {
   }
 
   const handleMobileNext = () => {
-    if (currentMobileIndex < categories.length - 1) {
+    if (currentMobileIndex < presentaciones.length - 1) {
       scrollToMobileIndex(currentMobileIndex + 1)
     }
   }
@@ -79,7 +79,7 @@ export default function CategoriesCarousel() {
       const scrollLeft = mobileScrollRef.current.scrollLeft
       const itemWidth = mobileScrollRef.current.offsetWidth
       const newIndex = Math.round(scrollLeft / itemWidth)
-      if (newIndex !== currentMobileIndex && newIndex >= 0 && newIndex < categories.length) {
+      if (newIndex !== currentMobileIndex && newIndex >= 0 && newIndex < presentaciones.length) {
         setCurrentMobileIndex(newIndex)
       }
     }
@@ -90,7 +90,7 @@ export default function CategoriesCarousel() {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Nuestras Categorías</h2>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Nuestras Presentaciones</h2>
             <div className="animate-pulse">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mt-8">
                 {Array.from({ length: 5 }).map((_, index) => (
@@ -104,7 +104,7 @@ export default function CategoriesCarousel() {
     )
   }
 
-  if (categories.length === 0) {
+  if (presentaciones.length === 0) {
     return null
   }
 
@@ -112,9 +112,9 @@ export default function CategoriesCarousel() {
     <section className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className={`text-center mb-12 transition-all duration-1000 ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}>
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Nuestras Categorías</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">Nuestras Presentaciones</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Descubre todos los productos organizados por categorías
+            Descubre todos los productos organizados por presentaciones
           </p>
           <div className="w-24 h-1 bg-green-600 mx-auto mt-4 rounded-full"></div>
         </div>
@@ -124,44 +124,44 @@ export default function CategoriesCarousel() {
           <div className="mb-8 text-center md:hidden">
             <p className="text-gray-600">
               <span className="font-semibold text-gray-900">{currentMobileIndex + 1}</span> de{" "}
-              <span className="font-semibold text-gray-900">{categories.length}</span> categorías
+              <span className="font-semibold text-gray-900">{presentaciones.length}</span> presentaciones
             </p>
           </div>
 
           {/* Vista Desktop - Grid con carrusel tradicional */}
-          <div className={`hidden md:block overflow-hidden transition-all duration-1000 delay-300 ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}>
+          <div className={`hidden md:block overflow-hidden transition-all duration-1000 delay-300 p-2 ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}>
             <div 
               className="flex transition-transform duration-500 ease-in-out"
               style={{ transform: `translateX(-${currentSlide * 100}%)` }}
             >
               {Array.from({ length: totalSlides }).map((_, slideIndex) => {
-                const slideCategories = categories.slice(
+                const slidePresentaciones = presentaciones.slice(
                   slideIndex * CATEGORIES_PER_SLIDE,
                   slideIndex * CATEGORIES_PER_SLIDE + CATEGORIES_PER_SLIDE
                 )
                 
                 return (
                   <div key={slideIndex} className="w-full flex-shrink-0">
-                    <div className="grid grid-cols-5 gap-6">
-                      {slideCategories.map((category) => {
-                        const slug = category.descripcion?.toLowerCase()
+                    <div className="grid grid-cols-5 gap-6 p-2">
+                      {slidePresentaciones.map((presentacion) => {
+                        const slug = presentacion.nombre?.toLowerCase()
                           .replace(/[^a-z0-9]+/g, '-')
                           .replace(/^-+|-+$/g, '')
                         
                         return (
                           <Link
-                            key={category.id}
-                            href={`/${slug}`}
+                            key={presentacion.id}
+                            href={`/presentaciones/${slug}`}
                             className="group"
                           >
                             <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border-2 border-green-200 hover:border-green-400 transform hover:scale-105 group-hover:bg-green-50 min-h-[200px]">
                               <div className="flex flex-col items-center text-center h-full justify-between">
-                                {/* Logo de la categoría */}
+                                {/* Imagen de la presentación */}
                                 <div className="w-16 h-16 mb-4 flex items-center justify-center">
-                                  {category.logo ? (
+                                  {presentacion.imagen ? (
                                     <img
-                                      src={category.logo}
-                                      alt={category.descripcion}
+                                      src={presentacion.imagen}
+                                      alt={presentacion.nombre}
                                       className="w-full h-full object-contain"
                                       onError={(e) => {
                                         const target = e.target as HTMLImageElement
@@ -171,12 +171,12 @@ export default function CategoriesCarousel() {
                                     />
                                   ) : null}
                                   <Package 
-                                    className={`w-12 h-12 text-green-600 ${category.logo ? 'hidden' : ''}`} 
+                                    className={`w-12 h-12 text-green-600 ${presentacion.imagen ? 'hidden' : ''}`} 
                                   />
                                 </div>
                                 
                                 <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors duration-300 line-clamp-2 min-h-[3rem] flex items-center justify-center text-center leading-tight break-words">
-                                  {category.descripcion}
+                                  {presentacion.nombre}
                                 </h3>
                                 
                                 <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -197,7 +197,7 @@ export default function CategoriesCarousel() {
           </div>
 
           {/* Vista Móvil - Carrusel horizontal con swipe */}
-          <div className={`md:hidden relative transition-all duration-1000 delay-300 ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}>
+          <div className={`md:hidden relative transition-all duration-1000 delay-300 p-2 ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}>
             {/* Botones de navegación */}
             <button
               onClick={handleMobilePrev}
@@ -209,7 +209,7 @@ export default function CategoriesCarousel() {
 
             <button
               onClick={handleMobileNext}
-              disabled={currentMobileIndex === categories.length - 1}
+              disabled={currentMobileIndex === presentaciones.length - 1}
               className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm rounded-full p-2 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity shadow-lg"
             >
               <ChevronRight size={24} className="text-green-600" />
@@ -222,25 +222,25 @@ export default function CategoriesCarousel() {
               className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              {categories.map((category) => {
-                const slug = category.descripcion?.toLowerCase()
+              {presentaciones.map((presentacion) => {
+                const slug = presentacion.nombre?.toLowerCase()
                   .replace(/[^a-z0-9]+/g, '-')
                   .replace(/^-+|-+$/g, '')
                 
                 return (
                   <div
-                    key={category.id}
+                    key={presentacion.id}
                     className="min-w-full snap-center px-4"
                   >
-                    <Link href={`/${slug}`} className="group block">
+                    <Link href={`/presentaciones/${slug}`} className="group block">
                       <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border-2 border-green-200 hover:border-green-400 group-hover:bg-green-50 min-h-[180px]">
                         <div className="flex flex-col items-center text-center h-full justify-between">
-                          {/* Logo de la categoría */}
+                          {/* Imagen de la presentación */}
                           <div className="w-12 h-12 mb-3 flex items-center justify-center">
-                            {category.logo ? (
+                            {presentacion.imagen ? (
                               <img
-                                src={category.logo}
-                                alt={category.descripcion}
+                                src={presentacion.imagen}
+                                alt={presentacion.nombre}
                                 className="w-full h-full object-contain"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement
@@ -250,12 +250,12 @@ export default function CategoriesCarousel() {
                               />
                             ) : null}
                             <Package 
-                              className={`w-10 h-10 text-green-600 ${category.logo ? 'hidden' : ''}`} 
+                              className={`w-10 h-10 text-green-600 ${presentacion.imagen ? 'hidden' : ''}`} 
                             />
                           </div>
                           
                           <h3 className="text-base font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors duration-300 line-clamp-2 text-center leading-tight break-words">
-                            {category.descripcion}
+                            {presentacion.nombre}
                           </h3>
                           
                           <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -273,7 +273,7 @@ export default function CategoriesCarousel() {
 
             {/* Indicadores de puntos para móvil */}
             <div className="flex justify-center space-x-2 mt-6">
-              {categories.map((_, index) => (
+              {presentaciones.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => scrollToMobileIndex(index)}
@@ -324,14 +324,14 @@ export default function CategoriesCarousel() {
           )}
         </div>
 
-        {/* Botón ver todas las categorías */}
+        {/* Botón ver todas las presentaciones */}
         <div className={`text-center mt-12 transition-all duration-1000 delay-500 ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}>
           <Link
-            href="/categorias"
+            href="/presentaciones"
             className="inline-flex items-center px-8 py-4 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
           >
             <Package className="mr-2 w-5 h-5" />
-            Ver todas las categorías
+            Ver todas las presentaciones
           </Link>
         </div>
       </div>
