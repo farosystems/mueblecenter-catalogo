@@ -38,6 +38,8 @@ export default function CategoriesDropdown({ isOpen, onClose, isMobile = false }
 
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        // Restaurar scroll del body al cerrar el dropdown
+        document.body.style.overflow = 'unset'
         onClose()
       }
     }
@@ -46,7 +48,11 @@ export default function CategoriesDropdown({ isOpen, onClose, isMobile = false }
       document.addEventListener('mousedown', handleClickOutside)
     }
 
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      // Asegurar que el scroll se restaure al desmontar el componente
+      document.body.style.overflow = 'unset'
+    }
   }, [isOpen, onClose, isMobile])
 
   // Prevenir scroll en el body cuando el modal móvil está abierto
@@ -119,17 +125,39 @@ export default function CategoriesDropdown({ isOpen, onClose, isMobile = false }
   return (
     <div 
       ref={dropdownRef}
-      className="bg-white rounded-xl shadow-2xl border border-gray-200 z-50 w-full max-w-[1200px] lg:min-w-[1200px]"
+      className="bg-white rounded-xl shadow-2xl border border-gray-200 z-50 w-full max-w-[min(95vw,1200px)] min-w-[300px]"
+      style={{
+        maxHeight: '85vh', // Limitar altura máxima al 85% del viewport
+        overflowY: 'auto' // Scroll si el contenido es muy alto
+      }}
+      onMouseEnter={() => {
+        // Prevenir scroll del body cuando el mouse está sobre el dropdown
+        document.body.style.overflow = 'hidden'
+      }}
+      onMouseLeave={() => {
+        // Restaurar scroll del body cuando el mouse sale del dropdown
+        document.body.style.overflow = 'unset'
+      }}
+      onWheel={(e) => {
+        // Prevenir completamente el scroll de la página
+        e.preventDefault()
+        e.stopPropagation()
+        
+        // Manejar el scroll manualmente en el contenedor
+        const container = e.currentTarget
+        const scrollAmount = e.deltaY
+        container.scrollTop += scrollAmount
+      }}
     >
-      <div className="p-4 lg:p-6">
-        <h3 className="text-base lg:text-lg font-bold text-gray-900 mb-4 lg:mb-6">Todas las Categorías</h3>
+      <div className="p-4 lg:p-6 h-full flex flex-col">
+        <h3 className="text-base lg:text-lg font-bold text-gray-900 mb-4 lg:mb-6 flex-shrink-0">Todas las Categorías</h3>
         
         {loading ? (
-          <div className="flex items-center justify-center py-8 lg:py-12">
+          <div className="flex items-center justify-center py-8 lg:py-12 flex-1">
             <div className="animate-spin rounded-full h-6 w-6 lg:h-8 lg:w-8 border-b-2 border-violet-600"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 lg:gap-4 max-h-80 lg:max-h-none overflow-y-auto lg:overflow-visible">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 lg:gap-4 overflow-y-auto flex-1 min-h-0">
             {categories.map((category) => {
               const slug = category.descripcion?.toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')

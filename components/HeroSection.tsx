@@ -129,10 +129,10 @@ export default function HeroSection() {
           className={`text-center mt-16 transition-all duration-1000 delay-1000 ${isVisible ? "animate-scale-in" : "opacity-0"}`}
         >
           <Link
-            href="/categorias"
+            href="/presentaciones"
             className="inline-block bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-bold py-5 px-10 rounded-full text-xl hover:from-yellow-300 hover:to-yellow-400 transform hover:scale-110 transition-all duration-300 shadow-2xl hover:shadow-3xl animate-pulse-glow border-2 border-yellow-300/50"
           >
-            Ver Categorias
+            Ver Presentaciones
           </Link>
         </div>
       </div>

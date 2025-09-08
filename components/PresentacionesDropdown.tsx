@@ -20,6 +20,10 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
   const [loading, setLoading] = useState(true)
   const [expandedPresentaciones, setExpandedPresentaciones] = useState<Set<string>>(new Set())
   const [expandedLineas, setExpandedLineas] = useState<Set<string>>(new Set())
+  const [hoveredPresentacion, setHoveredPresentacion] = useState<string | null>(null)
+  const [hoveredLinea, setHoveredLinea] = useState<string | null>(null)
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const lineaHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Cargar presentaciones de la base de datos
   useEffect(() => {
@@ -92,6 +96,8 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
 
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        // Restaurar scroll del body al cerrar el dropdown
+        document.body.style.overflow = 'unset'
         onClose()
       }
     }
@@ -100,7 +106,18 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
       document.addEventListener('mousedown', handleClickOutside)
     }
 
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      // Asegurar que el scroll se restaure al desmontar el componente
+      document.body.style.overflow = 'unset'
+      // Limpiar timeouts
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current)
+      }
+      if (lineaHoverTimeoutRef.current) {
+        clearTimeout(lineaHoverTimeoutRef.current)
+      }
+    }
   }, [isOpen, onClose, isMobile])
 
   // Prevenir scroll en el body cuando el modal móvil está abierto
@@ -248,28 +265,82 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
   return (
     <div 
       ref={dropdownRef}
-      className="bg-white rounded-xl shadow-2xl border border-gray-200 z-50 min-w-80 max-w-96"
+      className="bg-white rounded-xl shadow-2xl border border-gray-200 z-50 min-w-80 max-w-96 overflow-visible"
+      onMouseEnter={() => {
+        // Prevenir scroll del body cuando el mouse está sobre el dropdown
+        document.body.style.overflow = 'hidden'
+      }}
+      onMouseLeave={() => {
+        // Restaurar scroll del body cuando el mouse sale del dropdown
+        document.body.style.overflow = 'unset'
+      }}
+      onWheel={(e) => {
+        // Prevenir completamente el scroll de la página
+        e.preventDefault()
+        e.stopPropagation()
+        
+        // Manejar el scroll manualmente en el contenedor
+        const container = e.currentTarget
+        const scrollAmount = e.deltaY
+        container.scrollTop += scrollAmount
+      }}
     >
-      <div className="p-4">
+      <div className="p-4 overflow-visible">
         <h3 className="text-base font-bold text-gray-900 mb-4">Catálogo de Productos</h3>
+        
         
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
           </div>
         ) : (
-          <div>
+          <div 
+            className="overflow-visible"
+            style={{
+              maxHeight: 'calc(70vh - 100px)', // Resta el padding y header
+              overflowY: 'auto',
+              direction: 'rtl',
+              paddingBottom: '8px' // Espacio adicional al final
+            }}
+          >
+            <div style={{ direction: 'ltr', paddingBottom: '4px' }}>
             {presentaciones.map((presentacion) => (
-              <div key={presentacion.id} className="relative group border-b border-gray-100 last:border-b-0">
+              <div 
+                key={presentacion.id} 
+                className="relative border-b border-gray-100 last:border-b-0"
+                onMouseEnter={(e) => {
+                  if (!lineas[presentacion.id]) {
+                    loadLineas(presentacion.id)
+                  }
+                  const dropdown = e.currentTarget.querySelector('.dropdown-lineas') as HTMLElement
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  if (dropdown) {
+                    dropdown.style.display = 'block'
+                    dropdown.style.opacity = '1'
+                    dropdown.style.visibility = 'visible'
+                    dropdown.style.position = 'fixed'
+                    dropdown.style.left = `${rect.right + 4}px`
+                    dropdown.style.top = `${rect.top}px`
+                    dropdown.style.zIndex = '9999'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  const dropdown = e.currentTarget.querySelector('.dropdown-lineas') as HTMLElement
+                  if (dropdown) {
+                    // Delay para permitir mover el mouse al dropdown
+                    setTimeout(() => {
+                      // Verificar si el mouse no está sobre el dropdown antes de cerrar
+                      if (!dropdown.matches(':hover')) {
+                        dropdown.style.display = 'none'
+                        dropdown.style.opacity = '0'
+                        dropdown.style.visibility = 'hidden'
+                      }
+                    }, 200)
+                  }
+                }}
+              >
                 {/* Presentación Item */}
-                <div 
-                  className="flex items-center justify-between p-3 hover:bg-green-50 transition-colors cursor-pointer"
-                  onMouseEnter={() => {
-                    if (!lineas[presentacion.id]) {
-                      loadLineas(presentacion.id)
-                    }
-                  }}
-                >
+                <div className="flex items-center justify-between p-3 hover:bg-green-50 transition-colors cursor-pointer">
                   <div className="flex-1">
                     <Link
                       href={`/presentaciones/${createSlug(presentacion.nombre)}`}
@@ -288,18 +359,53 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
                 </div>
 
                 {/* Dropdown de líneas hacia la derecha */}
-                <div className="absolute left-full top-0 ml-1 bg-white border border-gray-200 rounded-lg shadow-xl z-20 min-w-64 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                <div 
+                  className="dropdown-lineas bg-white border border-gray-200 rounded-lg shadow-xl min-w-64 opacity-0 invisible transition-all duration-200" 
+                  style={{ display: 'none' }}
+                  onMouseLeave={(e) => {
+                    const dropdown = e.currentTarget
+                    setTimeout(() => {
+                      dropdown.style.display = 'none'
+                      dropdown.style.opacity = '0'
+                      dropdown.style.visibility = 'hidden'
+                    }, 100)
+                  }}
+                >
                   <div className="p-2">
                     {lineas[presentacion.id]?.map((linea) => (
-                      <div key={linea.id} className="relative group/linea">
-                        <div 
-                          className="flex items-center justify-between px-2 py-2 hover:bg-blue-50 rounded transition-colors"
-                          onMouseEnter={() => {
-                            if (!tipos[linea.id]) {
-                              loadTipos(linea.id)
-                            }
-                          }}
-                        >
+                      <div 
+                        key={linea.id} 
+                        className="relative"
+                        onMouseEnter={(e) => {
+                          if (!tipos[linea.id]) {
+                            loadTipos(linea.id)
+                          }
+                          const dropdown = e.currentTarget.querySelector('.dropdown-tipos') as HTMLElement
+                          const rect = e.currentTarget.getBoundingClientRect()
+                          if (dropdown) {
+                            dropdown.style.display = 'block'
+                            dropdown.style.opacity = '1'
+                            dropdown.style.visibility = 'visible'
+                            dropdown.style.position = 'fixed'
+                            dropdown.style.left = `${rect.right + 4}px`
+                            dropdown.style.top = `${rect.top}px`
+                            dropdown.style.zIndex = '9999'
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          const dropdown = e.currentTarget.querySelector('.dropdown-tipos') as HTMLElement
+                          if (dropdown) {
+                            setTimeout(() => {
+                              if (!dropdown.matches(':hover')) {
+                                dropdown.style.display = 'none'
+                                dropdown.style.opacity = '0'
+                                dropdown.style.visibility = 'hidden'
+                              }
+                            }, 200)
+                          }
+                        }}
+                      >
+                        <div className="flex items-center justify-between px-2 py-2 hover:bg-blue-50 rounded transition-colors">
                           <Link
                             href={`/lineas/${createSlug(linea.nombre)}`}
                             onClick={onClose}
@@ -311,14 +417,25 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
                         </div>
 
                         {/* Dropdown de tipos hacia la derecha */}
-                        <div className="absolute left-full top-0 ml-1 bg-white border border-gray-200 rounded-lg shadow-lg z-30 min-w-48 opacity-0 invisible group-hover/linea:opacity-100 group-hover/linea:visible transition-all duration-200">
+                        <div 
+                          className="dropdown-tipos bg-white border border-gray-200 rounded-lg shadow-lg min-w-48 opacity-0 invisible transition-all duration-200" 
+                          style={{ display: 'none' }}
+                          onMouseLeave={(e) => {
+                            const dropdown = e.currentTarget
+                            setTimeout(() => {
+                              dropdown.style.display = 'none'
+                              dropdown.style.opacity = '0'
+                              dropdown.style.visibility = 'hidden'
+                            }, 100)
+                          }}
+                        >
                           <div className="p-2">
                             {tipos[linea.id]?.map((tipo) => (
                               <Link
                                 key={tipo.id}
                                 href={`/tipos/${createSlug(tipo.nombre)}`}
                                 onClick={onClose}
-                                className="block px-2 py-2 text-sm text-purple-700 font-medium"
+                                className="block px-2 py-2 text-sm text-purple-700 font-medium hover:bg-purple-50 rounded transition-colors"
                               >
                                 {tipo.nombre}
                               </Link>
@@ -331,6 +448,7 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
                 </div>
               </div>
             ))}
+            </div>
           </div>
         )}
       </div>

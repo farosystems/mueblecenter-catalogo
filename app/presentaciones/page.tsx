@@ -7,11 +7,10 @@ import Link from 'next/link'
 import GlobalAppBar from '@/components/GlobalAppBar'
 import Footer from '@/components/Footer'
 import { ZonaGuard } from '@/components/ZonaGuard'
-import { useZonaContext } from '@/contexts/ZonaContext'
 import { 
   Home, 
   Package,
-  Layers
+  ArrowRight
 } from 'lucide-react'
 
 export default function PresentacionesPage() {
@@ -36,12 +35,6 @@ export default function PresentacionesPage() {
     loadPresentaciones()
   }, [])
 
-  const createSlug = (text: string) => {
-    return text.toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
@@ -61,19 +54,19 @@ export default function PresentacionesPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-6">
-            <Layers className="text-green-custom mr-3" size={48} />
+            <Package className="text-green-custom mr-3" size={48} />
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
-              Presentaciones
+              Nuestras Presentaciones
             </h1>
           </div>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Explora nuestras diferentes presentaciones de productos organizadas por categoría
+            Explora todas nuestras líneas de productos organizadas por presentación
           </p>
         </div>
 
         {/* Breadcrumb */}
         <div className="flex items-center mb-8 text-sm text-gray-500">
-          <Link href="/" className="transition-colors" style={{'--hover-color': '#1F632A'}} onMouseEnter={(e) => e.target.style.color = '#1F632A'} onMouseLeave={(e) => e.target.style.color = ''}>
+          <Link href="/" className="hover:text-green-custom transition-colors">
             Inicio
           </Link>
           <span className="mx-2">•</span>
@@ -83,7 +76,9 @@ export default function PresentacionesPage() {
         {/* Presentaciones Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {presentaciones.map((presentacion) => {
-            const slug = createSlug(presentacion.nombre)
+            const slug = presentacion.nombre?.toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-+|-+$/g, '')
             
             return (
               <Link 
@@ -91,29 +86,34 @@ export default function PresentacionesPage() {
                 href={`/presentaciones/${slug}`}
                 className="group"
               >
-                <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border border-gray-100 group-hover:border-green-300 transform group-hover:scale-105">
-                  <div className="flex flex-col items-center text-center">
-                    <div className="bg-green-gradient-br bg-green-gradient-br-hover rounded-full p-4 mb-4 transition-colors duration-300">
-                      <Layers className="text-white" size={32} />
-                    </div>
-                    
-                    <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-green-custom transition-colors duration-300">
-                      {presentacion.nombre}
-                    </h3>
-                    
-                    {presentacion.descripcion && (
-                      <p className="text-gray-500 text-sm group-hover:text-gray-600 transition-colors duration-300 mb-2">
-                        {presentacion.descripcion}
-                      </p>
-                    )}
-                    
-                    <p className="text-gray-500 text-sm group-hover:text-gray-600 transition-colors duration-300">
-                      Ver productos
-                    </p>
-                    
-                    <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium">
-                        Explorar →
+                <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 group-hover:border-green-200 transform group-hover:scale-105">
+                  {/* Imagen de la presentación */}
+                  <div className="relative aspect-video overflow-hidden">
+                    <img
+                      src={presentacion.imagen || '/placeholder-presentacion.jpg'}
+                      alt={presentacion.nombre}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-300"></div>
+                  </div>
+                  
+                  <div className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-green-custom transition-colors duration-300">
+                          {presentacion.nombre}
+                        </h3>
+                        
+                        {presentacion.descripcion && (
+                          <p className="text-gray-500 text-sm mb-4 line-clamp-2">
+                            {presentacion.descripcion}
+                          </p>
+                        )}
+                        
+                        <div className="flex items-center text-green-600 text-sm font-medium group-hover:text-green-700 transition-colors duration-300">
+                          <span>Ver productos</span>
+                          <ArrowRight className="ml-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-x-1" size={16} />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -123,11 +123,19 @@ export default function PresentacionesPage() {
           })}
         </div>
 
+        {presentaciones.length === 0 && (
+          <div className="text-center py-12">
+            <Package className="mx-auto text-gray-300 mb-4" size={64} />
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">No hay presentaciones disponibles</h3>
+            <p className="text-gray-500">Las presentaciones se mostrarán cuando estén disponibles</p>
+          </div>
+        )}
+
         {/* Back to Home Button */}
         <div className="text-center mt-12">
           <Link
             href="/"
-            className="inline-flex items-center bg-green-gradient-lr bg-green-gradient-hover text-white font-bold py-3 px-8 rounded-full transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+            className="inline-flex items-center bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-8 rounded-full transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
           >
             <Home className="mr-2" size={20} />
             Volver al Inicio

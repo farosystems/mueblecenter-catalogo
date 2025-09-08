@@ -237,6 +237,20 @@ export default function ProductVariosPageClient({ params }: ProductVariosPageCli
               {product.descripcion}
             </h1>
 
+            {/* Precio Principal */}
+            {(product.precio || 0) > 0 && (
+              <div className="mb-6">
+                <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg">
+                  <div className="text-center">
+                    <p className="text-sm font-medium opacity-90 mb-1">Precio de Lista</p>
+                    <p className="text-4xl font-bold">
+                      ${(product.precio || 0).toLocaleString('es-AR')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Precios */}
             <div className="mb-8">
               <FinancingPlansLarge 
@@ -320,7 +334,7 @@ export default function ProductVariosPageClient({ params }: ProductVariosPageCli
       </div>
       
       {/* Productos relacionados - Full Width */}
-      <section className="bg-featured-gradient py-16 text-white">        
+      <section className="bg-featured-gradient py-16 text-white">|        
         {relatedProducts.length > 0 ? (
           <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-16">
             <div className="text-center mb-12">
