@@ -18,6 +18,8 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
   const [lineas, setLineas] = useState<Record<string, Linea[]>>({})
   const [tipos, setTipos] = useState<Record<string, Tipo[]>>({})
   const [loading, setLoading] = useState(true)
+  const [presentacionesConLineas, setPresentacionesConLineas] = useState<Set<string>>(new Set())
+  const [lineasConTipos, setLineasConTipos] = useState<Set<string>>(new Set())
   const [expandedPresentaciones, setExpandedPresentaciones] = useState<Set<string>>(new Set())
   const [expandedLineas, setExpandedLineas] = useState<Set<string>>(new Set())
   const [hoveredPresentacion, setHoveredPresentacion] = useState<string | null>(null)
@@ -31,6 +33,35 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
       try {
         const presentacionesData = await getPresentaciones()
         setPresentaciones(presentacionesData)
+        
+        // Precargar información sobre qué presentaciones tienen líneas y qué líneas tienen tipos
+        const presentacionesConLineasSet = new Set<string>()
+        const lineasConTiposSet = new Set<string>()
+        
+        for (const presentacion of presentacionesData) {
+          try {
+            const lineasData = await getLineasByPresentacion(presentacion.id)
+            if (lineasData && lineasData.length > 0) {
+              presentacionesConLineasSet.add(presentacion.id)
+              
+              // Para cada línea, verificar si tiene tipos
+              for (const linea of lineasData) {
+                try {
+                  const tiposData = await getTiposByLinea(linea.id)
+                  if (tiposData && tiposData.length > 0) {
+                    lineasConTiposSet.add(linea.id)
+                  }
+                } catch (error) {
+                  console.error(`Error checking tipos for línea ${linea.id}:`, error)
+                }
+              }
+            }
+          } catch (error) {
+            console.error(`Error checking líneas for presentación ${presentacion.id}:`, error)
+          }
+        }
+        setPresentacionesConLineas(presentacionesConLineasSet)
+        setLineasConTipos(lineasConTiposSet)
       } catch (error) {
         console.error('Error loading presentaciones:', error)
       } finally {
@@ -45,6 +76,11 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
     try {
       const lineasData = await getLineasByPresentacion(presentacionId)
       setLineas(prev => ({ ...prev, [presentacionId]: lineasData }))
+      
+      // Actualizar el estado de presentaciones con líneas
+      if (lineasData && lineasData.length > 0) {
+        setPresentacionesConLineas(prev => new Set([...prev, presentacionId]))
+      }
     } catch (error) {
       console.error('Error loading líneas:', error)
     }
@@ -166,7 +202,7 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
               </div>
             ) : (
               <div className="space-y-2">
-                {presentaciones.map((presentacion) => (
+                {presentaciones.filter(presentacion => presentacionesConLineas.has(presentacion.id)).map((presentacion) => (
                   <div key={presentacion.id} className="border border-gray-200 rounded-xl overflow-hidden">
                     {/* Presentación Header */}
                     <div className="bg-green-50 border-b border-green-200">
@@ -304,14 +340,23 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
             }}
           >
             <div style={{ direction: 'ltr', paddingBottom: '4px' }}>
-            {presentaciones.map((presentacion) => (
+            {presentaciones.filter(presentacion => presentacionesConLineas.has(presentacion.id)).map((presentacion) => (
               <div 
                 key={presentacion.id} 
                 className="relative border-b border-gray-100 last:border-b-0"
-                onMouseEnter={(e) => {
+                onMouseEnter={async (e) => {
+                  // Verificar que currentTarget no sea null
+                  if (!e.currentTarget) return
+                  
                   if (!lineas[presentacion.id]) {
-                    loadLineas(presentacion.id)
+                    await loadLineas(presentacion.id)
                   }
+                  
+                  // Solo mostrar dropdown si hay líneas disponibles
+                  if (!presentacionesConLineas.has(presentacion.id)) {
+                    return
+                  }
+                  
                   const dropdown = e.currentTarget.querySelector('.dropdown-lineas') as HTMLElement
                   const rect = e.currentTarget.getBoundingClientRect()
                   if (dropdown) {
@@ -319,15 +364,42 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
                     dropdown.style.opacity = '1'
                     dropdown.style.visibility = 'visible'
                     dropdown.style.position = 'fixed'
-                    dropdown.style.left = `${rect.right + 4}px`
-                    dropdown.style.top = `${rect.top}px`
                     dropdown.style.zIndex = '9999'
+                    
+                    // Calcular posición más simple y directa
+                    const dropdownWidth = 256 // min-w-64 = 16 * 16px = 256px
+                    const viewportWidth = window.innerWidth
+                    const viewportHeight = window.innerHeight
+                    
+                    // Posición horizontal - siempre a la derecha del elemento, pero verificar si cabe
+                    let leftPos = rect.right + 8
+                    if (leftPos + dropdownWidth > viewportWidth - 20) {
+                      leftPos = rect.left - dropdownWidth - 8 // Mostrar a la izquierda
+                    }
+                    
+                    // Posición vertical - SIEMPRE alineado con el elemento
+                    // El scroll interno del dropdown manejará el contenido que se salga
+                    let topPos = rect.top
+                    
+                    // Solo ajustar si el dropdown empezaría fuera del viewport
+                    if (topPos < 10) {
+                      topPos = 10
+                    } else if (topPos > viewportHeight - 50) {
+                      // Si está muy abajo, mostrar al menos 50px del dropdown
+                      topPos = Math.max(10, viewportHeight - 50)
+                    }
+                    
+                    dropdown.style.left = `${leftPos}px`
+                    dropdown.style.top = `${topPos}px`
                   }
                 }}
                 onMouseLeave={(e) => {
+                  // Verificar que currentTarget no sea null
+                  if (!e.currentTarget) return
+                  
                   const dropdown = e.currentTarget.querySelector('.dropdown-lineas') as HTMLElement
                   if (dropdown) {
-                    // Delay para permitir mover el mouse al dropdown
+                    // Delay más largo para permitir mover el mouse al dropdown
                     setTimeout(() => {
                       // Verificar si el mouse no está sobre el dropdown antes de cerrar
                       if (!dropdown.matches(':hover')) {
@@ -335,7 +407,7 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
                         dropdown.style.opacity = '0'
                         dropdown.style.visibility = 'hidden'
                       }
-                    }, 200)
+                    }, 300)
                   }
                 }}
               >
@@ -355,20 +427,27 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
                       </p>
                     )}
                   </div>
-                  <ChevronRight className="text-green-600 size-4 ml-2" />
+                  {/* Solo mostrar flecha si hay líneas disponibles */}
+                  {presentacionesConLineas.has(presentacion.id) && (
+                    <ChevronRight className="text-green-600 size-4 ml-2" />
+                  )}
                 </div>
 
                 {/* Dropdown de líneas hacia la derecha */}
                 <div 
                   className="dropdown-lineas bg-white border border-gray-200 rounded-lg shadow-xl min-w-64 opacity-0 invisible transition-all duration-200" 
-                  style={{ display: 'none' }}
+                  style={{ 
+                    display: 'none',
+                    maxHeight: 'min(400px, calc(100vh - 80px))',
+                    overflowY: 'auto'
+                  }}
                   onMouseLeave={(e) => {
                     const dropdown = e.currentTarget
                     setTimeout(() => {
                       dropdown.style.display = 'none'
                       dropdown.style.opacity = '0'
                       dropdown.style.visibility = 'hidden'
-                    }, 100)
+                    }, 200)
                   }}
                 >
                   <div className="p-2">
@@ -377,9 +456,18 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
                         key={linea.id} 
                         className="relative"
                         onMouseEnter={(e) => {
+                          // Verificar que currentTarget no sea null
+                          if (!e.currentTarget) return
+                          
                           if (!tipos[linea.id]) {
                             loadTipos(linea.id)
                           }
+                          
+                          // Solo mostrar dropdown si la línea tiene tipos
+                          if (!lineasConTipos.has(linea.id)) {
+                            return
+                          }
+                          
                           const dropdown = e.currentTarget.querySelector('.dropdown-tipos') as HTMLElement
                           const rect = e.currentTarget.getBoundingClientRect()
                           if (dropdown) {
@@ -387,12 +475,41 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
                             dropdown.style.opacity = '1'
                             dropdown.style.visibility = 'visible'
                             dropdown.style.position = 'fixed'
-                            dropdown.style.left = `${rect.right + 4}px`
-                            dropdown.style.top = `${rect.top}px`
                             dropdown.style.zIndex = '9999'
+                            
+                            // Calcular posición más simple y directa
+                            const dropdownWidth = 192 // min-w-48 = 12 * 16px = 192px
+                            const viewportWidth = window.innerWidth
+                            const viewportHeight = window.innerHeight
+                            
+                            // Posición horizontal - siempre a la derecha del elemento, pero verificar si cabe
+                            let leftPos = rect.right + 8
+                            if (leftPos + dropdownWidth > viewportWidth - 20) {
+                              leftPos = rect.left - dropdownWidth - 8 // Mostrar a la izquierda
+                            }
+                            
+                            // Posición vertical - siempre alineado con el top del elemento
+                            let topPos = rect.top
+                            
+                            // Solo ajustar si el dropdown se saldría completamente de la pantalla
+                            // Permitir que se salga parcialmente para mantener la alineación
+                            const estimatedHeight = 300
+                            if (topPos < 10) {
+                              // Si está muy arriba, ajustar mínimamente
+                              topPos = 10
+                            } else if (topPos + 80 > viewportHeight - 10) {
+                              // Solo si las primeras opciones del dropdown no serían visibles
+                              topPos = Math.max(rect.top, viewportHeight - estimatedHeight - 10)
+                            }
+                            
+                            dropdown.style.left = `${leftPos}px`
+                            dropdown.style.top = `${topPos}px`
                           }
                         }}
                         onMouseLeave={(e) => {
+                          // Verificar que currentTarget no sea null
+                          if (!e.currentTarget) return
+                          
                           const dropdown = e.currentTarget.querySelector('.dropdown-tipos') as HTMLElement
                           if (dropdown) {
                             setTimeout(() => {
@@ -401,7 +518,7 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
                                 dropdown.style.opacity = '0'
                                 dropdown.style.visibility = 'hidden'
                               }
-                            }, 200)
+                            }, 300)
                           }
                         }}
                       >
@@ -413,20 +530,27 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
                           >
                             {linea.nombre}
                           </Link>
-                          <ChevronRight className="text-blue-600 size-3 ml-2" />
+                          {/* Solo mostrar flecha si la línea tiene tipos */}
+                          {lineasConTipos.has(linea.id) && (
+                            <ChevronRight className="text-blue-600 size-3 ml-2" />
+                          )}
                         </div>
 
                         {/* Dropdown de tipos hacia la derecha */}
                         <div 
                           className="dropdown-tipos bg-white border border-gray-200 rounded-lg shadow-lg min-w-48 opacity-0 invisible transition-all duration-200" 
-                          style={{ display: 'none' }}
+                          style={{ 
+                            display: 'none',
+                            maxHeight: 'min(300px, calc(100vh - 100px))',
+                            overflowY: 'auto'
+                          }}
                           onMouseLeave={(e) => {
                             const dropdown = e.currentTarget
                             setTimeout(() => {
                               dropdown.style.display = 'none'
                               dropdown.style.opacity = '0'
                               dropdown.style.visibility = 'hidden'
-                            }, 100)
+                            }, 200)
                           }}
                         >
                           <div className="p-2">
