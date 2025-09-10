@@ -101,6 +101,7 @@ export interface Product {
   imagen_3?: string
   imagen_4?: string
   imagen_5?: string
+  cucardas?: string
   fk_id_categoria: number
   fk_id_marca: number
   presentacion_id?: string
