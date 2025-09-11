@@ -41,6 +41,8 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
         for (const presentacion of presentacionesData) {
           try {
             const lineasData = await getLineasByPresentacion(presentacion.id)
+            console.log(`Presentación "${presentacion.nombre}": ${lineasData?.length || 0} líneas`)
+            
             if (lineasData && lineasData.length > 0) {
               presentacionesConLineasSet.add(presentacion.id)
               
@@ -53,6 +55,7 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
                   }
                 } catch (error) {
                   console.error(`Error checking tipos for línea ${linea.id}:`, error)
+                  // No hacer nada - la línea puede existir sin tipos
                 }
               }
             }
@@ -60,6 +63,9 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
             console.error(`Error checking líneas for presentación ${presentacion.id}:`, error)
           }
         }
+        
+        console.log(`Total presentaciones con líneas: ${presentacionesConLineasSet.size}`)
+        console.log(`Total líneas con tipos: ${lineasConTiposSet.size}`)
         setPresentacionesConLineas(presentacionesConLineasSet)
         setLineasConTipos(lineasConTiposSet)
       } catch (error) {
@@ -356,6 +362,9 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
                   if (!presentacionesConLineas.has(presentacion.id)) {
                     return
                   }
+                  
+                  // Verificar que currentTarget sigue siendo válido después del await
+                  if (!e.currentTarget) return
                   
                   const dropdown = e.currentTarget.querySelector('.dropdown-lineas') as HTMLElement
                   const rect = e.currentTarget.getBoundingClientRect()

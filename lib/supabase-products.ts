@@ -667,12 +667,12 @@ export async function getProductsByBrandAndZona(brandId: number, zonaId: number 
 
 // FUNCIONES PARA PRESENTACIONES, LÍNEAS Y TIPOS
 
-// Obtener todas las presentaciones activas que tengan líneas asociadas
+// Obtener todas las presentaciones activas
 export async function getPresentaciones(): Promise<Presentacion[]> {
   try {
     console.log('🔍 getPresentaciones: Intentando obtener presentaciones...')
     
-    // Solo obtener presentaciones que tengan líneas activas asociadas
+    // Obtener todas las presentaciones activas (el filtrado por líneas se hará después)
     const { data, error } = await supabase
       .from('presentaciones')
       .select(`
@@ -682,11 +682,9 @@ export async function getPresentaciones(): Promise<Presentacion[]> {
         imagen,
         activo,
         created_at,
-        updated_at,
-        lineas!inner(id)
+        updated_at
       `)
       .eq('activo', true)
-      .eq('lineas.activo', true)
       .order('nombre', { ascending: true })
 
     console.log('🔍 getPresentaciones: Respuesta de Supabase:', { data, error })
@@ -696,36 +694,20 @@ export async function getPresentaciones(): Promise<Presentacion[]> {
       return []
     }
 
-    // Filtrar presentaciones duplicadas (debido al inner join)
-    const presentacionesUnicas = data?.reduce((acc: Presentacion[], current: any) => {
-      if (!acc.find(p => p.id === current.id)) {
-        acc.push({
-          id: current.id,
-          nombre: current.nombre,
-          descripcion: current.descripcion,
-          imagen: current.imagen,
-          activo: current.activo,
-          created_at: current.created_at,
-          updated_at: current.updated_at
-        })
-      }
-      return acc
-    }, []) || []
-
-    console.log('✅ getPresentaciones: Datos obtenidos:', presentacionesUnicas)
-    return presentacionesUnicas
+    console.log('✅ getPresentaciones: Datos obtenidos:', data || [])
+    return data || []
   } catch (error) {
     console.error('❌ Error fetching presentaciones:', error)
     return []
   }
 }
 
-// Obtener líneas por presentación que tengan tipos asociados
+// Obtener todas las líneas activas por presentación (independientemente de si tienen tipos o no)
 export async function getLineasByPresentacion(presentacionId: string): Promise<Linea[]> {
   try {
     console.log('🔍 getLineasByPresentacion: Buscando líneas para presentación:', presentacionId)
     
-    // Solo obtener líneas que tengan tipos activos asociados
+    // Obtener TODAS las líneas activas de la presentación
     const { data, error } = await supabase
       .from('lineas')
       .select(`
@@ -735,12 +717,10 @@ export async function getLineasByPresentacion(presentacionId: string): Promise<L
         presentacion_id,
         activo,
         created_at,
-        updated_at,
-        tipos!inner(id)
+        updated_at
       `)
       .eq('presentacion_id', presentacionId)
       .eq('activo', true)
-      .eq('tipos.activo', true)
       .order('nombre', { ascending: true })
 
     if (error) {
@@ -748,24 +728,8 @@ export async function getLineasByPresentacion(presentacionId: string): Promise<L
       return []
     }
 
-    // Filtrar líneas duplicadas (debido al inner join)
-    const lineasUnicas = data?.reduce((acc: Linea[], current: any) => {
-      if (!acc.find(l => l.id === current.id)) {
-        acc.push({
-          id: current.id,
-          nombre: current.nombre,
-          descripcion: current.descripcion,
-          presentacion_id: current.presentacion_id,
-          activo: current.activo,
-          created_at: current.created_at,
-          updated_at: current.updated_at
-        })
-      }
-      return acc
-    }, []) || []
-
-    console.log('✅ getLineasByPresentacion: Datos obtenidos:', lineasUnicas)
-    return lineasUnicas
+    console.log('✅ getLineasByPresentacion: Datos obtenidos:', data || [])
+    return data || []
   } catch (error) {
     console.error('❌ Error fetching líneas:', error)
     return []
