@@ -17,6 +17,78 @@ export default function ZonaSelectorModal({ isOpen, onClose }: ZonaSelectorModal
   const [selectedZona, setSelectedZona] = useState<Zona | null>(null)
   const [isSelecting, setIsSelecting] = useState(false)
 
+  // Bloquear scroll del body cuando el modal está abierto
+  useEffect(() => {
+    if (isOpen) {
+      // Guardar la posición actual del scroll
+      const scrollY = window.scrollY
+
+      // Aplicar estilos para bloquear el scroll del body
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollY}px`
+      document.body.style.width = '100%'
+      document.body.style.overflow = 'hidden'
+
+      // Prevenir scroll pero permitir dentro del modal
+      const preventScroll = (e: Event) => {
+        const target = e.target as Element
+        const modalContainer = document.querySelector('[data-modal-scroll-container]')
+
+        // Si el evento proviene del contenedor del modal o sus hijos, permitirlo
+        if (modalContainer && (modalContainer.contains(target) || target === modalContainer)) {
+          return
+        }
+
+        // Sino, prevenir el scroll
+        e.preventDefault()
+        return false
+      }
+
+      // Agregar listeners para diferentes tipos de eventos de scroll
+      document.addEventListener('wheel', preventScroll, { passive: false })
+      document.addEventListener('touchmove', preventScroll, { passive: false })
+
+      // Cleanup
+      return () => {
+        // Restaurar el scroll
+        document.body.style.position = ''
+        document.body.style.top = ''
+        document.body.style.width = ''
+        document.body.style.overflow = ''
+
+        // Restaurar la posición del scroll
+        window.scrollTo(0, scrollY)
+
+        // Remover listeners
+        document.removeEventListener('wheel', preventScroll)
+        document.removeEventListener('touchmove', preventScroll)
+      }
+    }
+  }, [isOpen])
+
+  // Prevenir propagación del scroll cuando se alcanza el límite del contenedor
+  const handleScrollContainer = (e: React.WheelEvent) => {
+    const container = e.currentTarget
+    const { scrollTop, scrollHeight, clientHeight } = container
+
+    // Si estamos en el tope y scrolleando hacia arriba, o en el fondo y scrolleando hacia abajo
+    if ((scrollTop === 0 && e.deltaY < 0) || (scrollTop + clientHeight >= scrollHeight && e.deltaY > 0)) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+  }
+
+  // Manejar eventos táctiles para mobile
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const container = e.currentTarget
+    const { scrollTop, scrollHeight, clientHeight } = container
+
+    // Permitir scroll solo dentro del contenedor
+    if (scrollTop === 0 || scrollTop + clientHeight >= scrollHeight) {
+      e.preventDefault()
+    }
+  }
+
   const handleZonaSelect = async (zona: Zona) => {
     setSelectedZona(zona)
     setIsSelecting(true)
@@ -88,7 +160,12 @@ export default function ZonaSelectorModal({ isOpen, onClose }: ZonaSelectorModal
                 <p className="text-gray-600 text-sm">Elige la zona más cercana a tu ubicación</p>
               </div>
               
-              <div className="space-y-3 max-h-60 sm:max-h-80 overflow-y-auto scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-green-300 scrollbar-thumb-rounded-full">
+              <div
+                data-modal-scroll-container
+                className="space-y-3 max-h-60 sm:max-h-80 overflow-y-auto scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-green-300 scrollbar-thumb-rounded-full"
+                onWheel={handleScrollContainer}
+                onTouchMove={handleTouchMove}
+              >
                 {zonas.map((zona) => (
                   <button
                     key={zona.id}
