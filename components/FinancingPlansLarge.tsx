@@ -66,17 +66,35 @@ export default function FinancingPlansLarge({ productoId, precio, showDebug = fa
 
   // Mostrar todos los planes disponibles para este producto con diferentes colores
   const colores = [
-    'bg-blue-100 text-blue-800', 
-    'bg-green-100 text-green-800', 
-    'bg-purple-100 text-purple-800', 
+    'bg-blue-100 text-blue-800',
+    'bg-green-100 text-green-800',
+    'bg-purple-100 text-purple-800',
     'bg-orange-100 text-orange-800',
     'bg-red-100 text-red-800',
     'bg-indigo-100 text-indigo-800'
   ]
 
+  // Ordenar planes: 3 cuotas primero, luego el resto
+  const planesOrdenados = [...planes].sort((a, b) => {
+    if (a.cuotas === 3) return -1
+    if (b.cuotas === 3) return 1
+    return a.cuotas - b.cuotas
+  })
+
   return (
     <div className="bg-white rounded-lg p-4 shadow-sm">
       <h3 className="text-lg font-bold text-gray-900 mb-3">Planes de Financiación</h3>
+
+      {/* Logos de tarjetas */}
+      <div className="mb-4 text-center">
+        <p className="text-sm font-semibold text-gray-700 mb-2">¡Con todas las tarjetas!</p>
+        <div className="flex justify-center items-center gap-4 flex-wrap">
+          <img src="/tarjetas_logos/visa-logo-visa-icon-transparent-free-png.webp" alt="Visa" className="h-16 w-auto" />
+          <img src="/tarjetas_logos/free-tarjeta-mastercard-logo-icon-svg-download-png-2944982.webp" alt="Mastercard" className="h-16 w-auto" />
+          <img src="/tarjetas_logos/enterprise_Payment_Methods_partner_logo_amex.png" alt="American Express" className="h-16 w-auto" />
+          <img src="/tarjetas_logos/Cabal_logo-removebg-preview.png" alt="Cabal" className="h-16 w-auto" />
+        </div>
+      </div>
       
       {/* Información de debug */}
       {showDebug && (
@@ -86,7 +104,7 @@ export default function FinancingPlansLarge({ productoId, precio, showDebug = fa
       )}
       
       <div className="space-y-2">
-        {planes.map((plan, index) => {
+        {planesOrdenados.map((plan, index) => {
           const calculo = calcularCuota(precio, plan)
           const anticipo = calcularAnticipo(precio, plan)
           if (!calculo) return null
@@ -95,12 +113,15 @@ export default function FinancingPlansLarge({ productoId, precio, showDebug = fa
             <div
               key={plan.id}
               className={`p-3 rounded-lg text-center font-bold text-base ${
-                colores[index % colores.length]
+                plan.cuotas === 3 ? 'bg-yellow-200 text-yellow-900 ring-2 ring-yellow-400' : colores[index % colores.length]
               }`}
             >
               <div className="mb-1">
-                <div className="text-lg mb-1">
-                  {plan.cuotas} CUOTAS x ${formatearPrecio(calculo.cuota_mensual)} EF
+                <div className="text-xl mb-1">
+                  {plan.cuotas === 3 ?
+                    `${plan.cuotas} cuotas sin interés de $${formatearPrecio(calculo.cuota_mensual)}` :
+                    `${plan.cuotas} cuotas fijas de $${formatearPrecio(calculo.cuota_mensual)}`
+                  }
                 </div>
               </div>
               {anticipo > 0 && (

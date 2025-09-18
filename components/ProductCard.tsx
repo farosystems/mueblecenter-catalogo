@@ -45,14 +45,14 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
 
             {/* Precio del producto */}
             {productPrice > 0 && (
-              <p className="text-lg font-bold text-green-600 mb-1">
+              <p className="text-xl font-bold text-green-600 mb-1">
                 ${productPrice.toLocaleString('es-AR')}
               </p>
             )}
 
-            {/* Planes de Financiación - Versión compacta */}
+            {/* Planes de Financiación - Versión simplificada */}
             <div className="mb-1">
-              <FinancingPlans productoId={product.id} precio={productPrice} />
+              <FinancingPlans productoId={product.id} precio={productPrice} simplified={true} />
             </div>
 
             {/* Botones de acción compactos */}
@@ -123,13 +123,13 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
 
           {/* Precio del producto */}
           {productPrice > 0 && (
-            <p className="text-xl sm:text-2xl font-bold text-green-600 mb-3">
+            <p className="text-2xl sm:text-3xl font-bold text-green-600 mb-3">
               ${productPrice.toLocaleString('es-AR')}
             </p>
           )}
 
           {/* Planes de Financiación - Versión simplificada */}
-          <FinancingPlans productoId={product.id} precio={productPrice} />
+          <FinancingPlans productoId={product.id} precio={productPrice} simplified={true} />
 
           {/* Botones de acción */}
           <div className="mt-3 space-y-2">

@@ -8,9 +8,10 @@ interface FinancingPlansProps {
   productoId: string
   precio: number
   showDebug?: boolean
+  simplified?: boolean
 }
 
-export default function FinancingPlans({ productoId, precio, showDebug = false }: FinancingPlansProps) {
+export default function FinancingPlans({ productoId, precio, showDebug = false, simplified = false }: FinancingPlansProps) {
   const [planes, setPlanes] = useState<PlanFinanciacion[]>([])
   const [loading, setLoading] = useState(true)
   const [tipoPlanes, setTipoPlanes] = useState<'especiales' | 'default' | 'todos' | 'ninguno'>('ninguno')
@@ -67,6 +68,13 @@ export default function FinancingPlans({ productoId, precio, showDebug = false }
   // Mostrar todos los planes disponibles para este producto
   const colores = ['bg-blue-100 text-blue-800', 'bg-green-100 text-green-800', 'bg-purple-100 text-purple-800', 'bg-orange-100 text-orange-800']
 
+  // Ordenar planes: 3 cuotas primero, luego el resto
+  const planesOrdenados = [...planes].sort((a, b) => {
+    if (a.cuotas === 3) return -1
+    if (b.cuotas === 3) return 1
+    return a.cuotas - b.cuotas
+  })
+
   return (
     <div className="mt-3 space-y-2">
       {/* Información de debug */}
@@ -76,7 +84,7 @@ export default function FinancingPlans({ productoId, precio, showDebug = false }
         </div>
       )}
       
-      {planes.map((plan, index) => {
+      {planesOrdenados.map((plan, index) => {
         const calculo = calcularCuota(precio, plan)
         const anticipo = calcularAnticipo(precio, plan)
         if (!calculo) return null
@@ -85,12 +93,19 @@ export default function FinancingPlans({ productoId, precio, showDebug = false }
           <div
             key={plan.id}
             className={`p-2 rounded-lg text-center font-bold ${
-              colores[index % colores.length]
+              plan.cuotas === 3 ? 'bg-yellow-200 text-yellow-900 ring-2 ring-yellow-400' : colores[index % colores.length]
             }`}
-            style={{fontSize: '14px'}}
+            style={{fontSize: simplified ? '16px' : '14px'}}
           >
             <div className="mb-1">
-              {plan.cuotas} CUOTAS x ${formatearPrecio(calculo.cuota_mensual)} EF
+              {simplified ?
+                plan.cuotas === 3 ?
+                  `${plan.cuotas} cuotas sin interés de $${formatearPrecio(calculo.cuota_mensual)}` :
+                  `${plan.cuotas} cuotas fijas de $${formatearPrecio(calculo.cuota_mensual)}` :
+                plan.cuotas === 3 ?
+                  `${plan.cuotas} cuotas sin interés de $${formatearPrecio(calculo.cuota_mensual)}` :
+                  `${plan.cuotas} cuotas fijas de $${formatearPrecio(calculo.cuota_mensual)}`
+              }
             </div>
             {anticipo > 0 && (
               <div className="font-normal opacity-90" style={{fontSize: '12px'}}>

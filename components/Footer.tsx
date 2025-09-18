@@ -20,10 +20,10 @@ export default function Footer() {
           {/* Columna 1: MUNDOCUOTAS */}
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
-              <img 
-                src="/LOGO BLANCO.png" 
-                alt="MUNDO CUOTAS" 
-                className="h-20 w-auto"
+              <img
+                src="/LOGO BLANCO.png"
+                alt="MUNDO CUOTAS"
+                className="h-12 w-auto"
               />
               <div>
                 <h3 className="text-xl font-bold">MueblesCenter</h3>
@@ -96,11 +96,15 @@ export default function Footer() {
           <div className="space-y-4">
             <h3 className="text-lg font-bold border-b border-green-600 pb-2">Contacto</h3>
             <div className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <Phone className="size-4 text-violet-300" />
+              <div className="flex items-start space-x-3">
+                <Phone className="size-4 text-violet-300 mt-1" />
                 <div>
-                  <p className="text-white font-medium">0810-333-9435</p>
-                  <p className="text-white font-medium">011-6811-6000</p>
+                  <p className="text-white font-medium whitespace-nowrap">Central: 11 3093-8491</p>
+                  <p className="text-white font-medium whitespace-nowrap">Maschwitz: 11 3093-8487</p>
+                  <p className="text-white font-medium whitespace-nowrap">Matheu: 11 2850-5547</p>
+                  <p className="text-white font-medium whitespace-nowrap">Garin: 11 3093-8486</p>
+                  <p className="text-white font-medium whitespace-nowrap">Cardales: 11 3093-8483</p>
+                  <p className="text-white font-medium whitespace-nowrap">Capilla del Señor: 11 3093-8492</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Presentacion } from '@/lib/products'
-import { getPresentaciones } from '@/lib/supabase-products'
+import { getPresentacionesConProductos } from '@/lib/supabase-products'
 import Link from 'next/link'
 import GlobalAppBar from '@/components/GlobalAppBar'
 import Footer from '@/components/Footer'
@@ -21,7 +21,7 @@ export default function PresentacionesPage() {
     const loadPresentaciones = async () => {
       console.log('📦 PresentacionesPage: Iniciando carga de presentaciones...')
       try {
-        const presentacionesData = await getPresentaciones()
+        const presentacionesData = await getPresentacionesConProductos()
         console.log('📦 PresentacionesPage: Presentaciones recibidas:', presentacionesData.length)
         setPresentaciones(presentacionesData)
       } catch (error) {

@@ -916,3 +916,57 @@ export async function getAllTipos(): Promise<Tipo[]> {
     return []
   }
 }
+
+// Obtener presentaciones que tienen productos asociados
+export async function getPresentacionesConProductos(): Promise<Presentacion[]> {
+  try {
+    console.log('🔍 getPresentacionesConProductos: Obteniendo presentaciones con productos...')
+
+    // Query para obtener presentaciones que tienen productos activos
+    const { data, error } = await supabase
+      .from('presentaciones')
+      .select(`
+        id,
+        nombre,
+        descripcion,
+        imagen,
+        activo,
+        created_at,
+        updated_at,
+        lineas!inner(
+          tipos!inner(
+            productos!inner(id)
+          )
+        )
+      `)
+      .eq('activo', true)
+      .eq('lineas.activo', true)
+      .eq('lineas.tipos.activo', true)
+      .eq('lineas.tipos.productos.activo', true)
+      .gt('lineas.tipos.productos.precio', 0)
+      .order('nombre', { ascending: true })
+
+    if (error) {
+      console.error('❌ Error fetching presentaciones con productos:', error)
+      return []
+    }
+
+    // Filtrar duplicados de presentaciones (pueden aparecer múltiples veces debido al JOIN)
+    const presentacionesUnicas = data?.reduce((acc, current) => {
+      const existe = acc.find(item => item.id === current.id)
+      if (!existe) {
+        // Limpiar el objeto para que no tenga las relaciones anidadas
+        const { lineas, ...presentacionLimpia } = current
+        acc.push(presentacionLimpia)
+      }
+      return acc
+    }, [] as Presentacion[]) || []
+
+    console.log('✅ getPresentacionesConProductos: Presentaciones con productos:', presentacionesUnicas.length)
+    return presentacionesUnicas
+
+  } catch (error) {
+    console.error('❌ Error fetching presentaciones con productos:', error)
+    return []
+  }
+}

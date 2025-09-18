@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { ChevronLeft, ChevronRight, Package } from "lucide-react"
 import Link from "next/link"
-import { getPresentaciones } from "@/lib/supabase-products"
+import { getPresentacionesConProductos } from "@/lib/supabase-products"
 import { Presentacion } from "@/lib/products"
 
 const CATEGORIES_PER_SLIDE = 5
@@ -23,7 +23,7 @@ export default function CategoriesCarousel() {
   useEffect(() => {
     const loadPresentaciones = async () => {
       try {
-        const presentacionesData = await getPresentaciones()
+        const presentacionesData = await getPresentacionesConProductos()
         setPresentaciones(presentacionesData)
       } catch (error) {
         console.error('Error loading presentaciones:', error)

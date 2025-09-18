@@ -14,14 +14,14 @@ const fonts = [
 ]
 
 const colors = [
-  "#FF2F12", // rojo
-  "#FF8500", // naranja
-  "#FFD700", // amarillo
-  "#8FD527", // verde
-  "#FF2F12", // rojo
-  "#FF8500", // naranja
-  "#FFD700", // amarillo
-  "#8FD527"  // verde
+  "#316a13", // verde oscuro
+  "#8fd527", // verde claro
+  "#ff2f12", // rojo
+  "#316a13", // verde oscuro
+  "#8fd527", // verde claro
+  "#ff2f12", // rojo
+  "#316a13", // verde oscuro
+  "#8fd527"  // verde claro
 ]
 
 export default function TypewriterText() {

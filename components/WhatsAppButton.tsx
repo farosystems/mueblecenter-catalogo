@@ -1,6 +1,5 @@
 "use client"
 
-import { MessageCircle } from "lucide-react"
 import { useState, useEffect } from "react"
 import type { Product } from "@/lib/products"
 import { useConfiguracion } from "@/hooks/use-configuracion"
@@ -122,7 +121,7 @@ export default function WhatsAppButton({ product, onSuccess }: WhatsAppButtonPro
         disabled
         className="relative w-full bg-gray-400 text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center transition-all duration-300 text-lg shadow-lg cursor-not-allowed"
       >
-        <MessageCircle className="mr-3 animate-pulse" size={24} />
+        <img src="/WhatsApp.svg (1).webp" alt="WhatsApp" className="mr-3 w-6 h-6 animate-pulse" />
         <span>Cargando...</span>
       </button>
     )
@@ -148,7 +147,7 @@ export default function WhatsAppButton({ product, onSuccess }: WhatsAppButtonPro
           }`}
         ></div>
 
-        <MessageCircle className={`mr-3 transition-all duration-300 ${isHovered ? "animate-bounce" : ""}`} size={24} />
+        <img src="/WhatsApp.svg (1).webp" alt="WhatsApp" className={`mr-3 w-6 h-6 transition-all duration-300 ${isHovered ? "animate-bounce" : ""}`} />
 
         <span className="relative z-10">Consultar Producto por WhatsApp</span>
 
