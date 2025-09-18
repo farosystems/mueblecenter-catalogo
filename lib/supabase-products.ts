@@ -10,14 +10,18 @@ export function formatearPrecio(precio: number): string {
   })
 }
 
-// Función para redondear cuotas: a partir de $50 redondea por centenas
+// Función para formatear cuotas con hasta 3 decimales
+export function formatearCuota(cuota: number): string {
+  return cuota.toLocaleString('es-AR', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 3
+  })
+}
+
+// Función para mantener cuotas con 3 decimales de precisión
 export function redondearCuota(cuota: number): number {
-  if (cuota >= 50) {
-    // Redondear por centenas (a la centena más cercana)
-    return Math.round(cuota / 100) * 100
-  }
-  // Para cuotas menores a $50, mantener redondeo a 2 decimales
-  return Math.round(cuota * 100) / 100
+  // Mantener siempre 3 decimales de precisión
+  return Math.round(cuota * 1000) / 1000
 }
 
 // Función para calcular precio P.ELECTRO (precio + 10%)

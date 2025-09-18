@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { PlanFinanciacion } from '@/lib/products'
-import { getPlanesProducto, calcularCuota, formatearPrecio, getTipoPlanesProducto, calcularAnticipo } from '@/lib/supabase-products'
+import { getPlanesProducto, calcularCuota, formatearPrecio, formatearCuota, getTipoPlanesProducto, calcularAnticipo } from '@/lib/supabase-products'
 
 interface FinancingPlansProps {
   productoId: string
@@ -100,11 +100,11 @@ export default function FinancingPlans({ productoId, precio, showDebug = false, 
             <div className="mb-1">
               {simplified ?
                 plan.cuotas === 3 ?
-                  `${plan.cuotas} cuotas sin interés de $${formatearPrecio(calculo.cuota_mensual)}` :
-                  `${plan.cuotas} cuotas fijas de $${formatearPrecio(calculo.cuota_mensual)}` :
+                  `${plan.cuotas} cuotas sin interés de $${formatearCuota(calculo.cuota_mensual)}` :
+                  `${plan.cuotas} cuotas fijas de $${formatearCuota(calculo.cuota_mensual)}` :
                 plan.cuotas === 3 ?
-                  `${plan.cuotas} cuotas sin interés de $${formatearPrecio(calculo.cuota_mensual)}` :
-                  `${plan.cuotas} cuotas fijas de $${formatearPrecio(calculo.cuota_mensual)}`
+                  `${plan.cuotas} cuotas sin interés de $${formatearCuota(calculo.cuota_mensual)}` :
+                  `${plan.cuotas} cuotas fijas de $${formatearCuota(calculo.cuota_mensual)}`
               }
             </div>
             {anticipo > 0 && (

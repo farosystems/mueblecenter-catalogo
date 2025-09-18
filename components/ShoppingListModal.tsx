@@ -17,25 +17,31 @@ export default function ShoppingListModal({ isOpen, onClose }: ShoppingListModal
   if (!isOpen) return null
 
   // Crear un producto virtual que contenga la información de todos los productos de la lista
-  const virtualProduct = {
-    id: 0,
+  const virtualProduct: Product = {
+    id: '0',
     descripcion: `Lista de ${itemCount} producto${itemCount !== 1 ? 's' : ''}`,
     name: `Lista de ${itemCount} producto${itemCount !== 1 ? 's' : ''}`,
-    categoria: { descripcion: 'Múltiples categorías' },
-    marca: { descripcion: 'Varias marcas' },
+    categoria: { id: 0, descripcion: 'Múltiples categorías', created_at: '' },
+    marca: { id: 0, descripcion: 'Varias marcas', created_at: '' },
     precio: 0,
     imagen: '/placeholder.jpg',
+    stock: 0,
+    fk_id_categoria: 0,
+    fk_id_marca: 0,
+    destacado: false,
+    created_at: '',
+    updated_at: '',
     descripcion_detallada: items.map((item, index) => {
       let productLine = `${index + 1}. ${item.descripcion || item.name || 'Producto'}`
-      
+
       if (item.categoria?.descripcion) {
         productLine += `\n   Categoría: ${item.categoria.descripcion}`
       }
-      
+
       if (item.marca?.descripcion) {
         productLine += `\n   Marca: ${item.marca.descripcion}`
       }
-      
+
       return productLine
     }).join('\n\n')
   }
@@ -122,7 +128,7 @@ export default function ShoppingListModal({ isOpen, onClose }: ShoppingListModal
 
                   {/* Botón eliminar */}
                   <button
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => removeItem(Number(item.id))}
                     className="p-2 hover:bg-red-100 rounded-full transition-colors text-red-500 hover:text-red-700"
                     title="Eliminar de la lista"
                   >
