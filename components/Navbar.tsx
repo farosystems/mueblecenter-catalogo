@@ -3,10 +3,34 @@
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { Menu, X } from "lucide-react"
+import { getLogo } from "@/lib/supabase-config"
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [logo, setLogo] = useState<string>('/logo1.png')
+
+  // Cargar logo
+  useEffect(() => {
+    const loadLogo = async () => {
+      try {
+        console.log('Navbar: Intentando cargar logo...')
+        const logoUrl = await getLogo()
+        console.log('Navbar: Logo obtenido:', logoUrl)
+        // Si hay logo configurado en la BD, usarlo; sino mantener el por defecto
+        if (logoUrl) {
+          console.log('Navbar: Actualizando logo a:', logoUrl)
+          setLogo(logoUrl)
+        } else {
+          console.log('Navbar: No hay logo configurado, manteniendo por defecto')
+        }
+        // Si logoUrl es null, mantiene '/logo1.png' por defecto
+      } catch (error) {
+        console.error('Navbar: Error al cargar logo:', error)
+      }
+    }
+    loadLogo()
+  }, [])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,6 +48,8 @@ export default function Navbar() {
     setIsOpen(false)
   }
 
+  console.log('Navbar: Renderizando con logo:', logo)
+
   return (
     <nav
       className={`fixed w-full z-50 transition-all duration-300 ${
@@ -32,12 +58,21 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex items-center">
+          <div className="flex items-center flex-shrink-0 w-20">
             <Link
               href="/"
-              className="text-2xl font-bold text-yellow-400 hover:text-yellow-300 transition-colors duration-300 animate-pulse-glow"
+              className="flex items-center hover:opacity-80 transition-opacity duration-300"
             >
-              MueblesCenter
+              <img
+                src={logo}
+                alt="MueblesCenter"
+                className="object-contain"
+                style={{ height: '24px', width: 'auto', maxWidth: '80px' }}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.src = '/logo1.png'
+                }}
+              />
             </Link>
           </div>
 

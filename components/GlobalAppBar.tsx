@@ -8,14 +8,31 @@ import ShoppingListModal from "./ShoppingListModal"
 import { useState, useEffect } from "react"
 import { useShoppingList } from "@/hooks/use-shopping-list"
 import { useZonaContext } from "@/contexts/ZonaContext"
+import { getLogo } from "@/lib/supabase-config"
 
 export default function GlobalAppBar() {
   const [isPresentacionesOpen, setIsPresentacionesOpen] = useState(false)
   const [isMobilePresentacionesOpen, setIsMobilePresentacionesOpen] = useState(false)
   const [isShoppingListOpen, setIsShoppingListOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [logo, setLogo] = useState<string>('/logo1.png')
   const { itemCount } = useShoppingList()
   const { zonaSeleccionada, clearZona } = useZonaContext()
+
+  // Cargar logo
+  useEffect(() => {
+    const loadLogo = async () => {
+      try {
+        const logoUrl = await getLogo()
+        if (logoUrl) {
+          setLogo(logoUrl)
+        }
+      } catch (error) {
+        console.error('Error al cargar logo:', error)
+      }
+    }
+    loadLogo()
+  }, [])
   
   // Cerrar menú móvil al cambiar el tamaño de pantalla
   useEffect(() => {
@@ -43,21 +60,25 @@ export default function GlobalAppBar() {
           {/* Header principal */}
           <div className="flex items-center justify-between py-3 lg:py-4">
             {/* Logo - responsive */}
-            <div className="flex-shrink-0 ml-14">
+            <div className="flex-shrink-0 lg:ml-14">
               <Link href="/" className="flex items-center group">
-                <div className="relative ml-[-40px]">
-                  <img 
-                   src="/logo1.png" 
-                    alt="MueblesCenter" 
-                    className="h-32 w-auto scale-125 sm:scale-150 lg:scale-175 transition-transform duration-300 group-hover:scale-190"
+                <div className="relative lg:ml-[-40px]">
+                  <img
+                    src={logo}
+                    alt="MueblesCenter"
+                    className="h-16 sm:h-20 lg:h-32 w-auto transition-transform duration-300 group-hover:scale-110"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.src = '/logo1.png'
+                    }}
                   />
                   <div className="absolute inset-0 bg-green-400 opacity-0 group-hover:opacity-10 rounded-lg transition-opacity duration-300"></div>
                 </div>
               </Link>
             </div>
 
-            {/* Buscador desktop */}
-            <div className="flex-1 max-w-4xl mx-4 hidden lg:block">
+            {/* Buscador responsive */}
+            <div className="flex-1 max-w-4xl mx-2 lg:mx-4 lg:block">
               <ProductSearch />
             </div>
 
@@ -156,10 +177,6 @@ export default function GlobalAppBar() {
             </div>
           </div>
 
-          {/* Buscador móvil */}
-          <div className="lg:hidden pb-3 px-2">
-            <ProductSearch />
-          </div>
         </div>
 
         {/* Menú móvil */}

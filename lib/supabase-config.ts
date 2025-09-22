@@ -283,9 +283,9 @@ export async function getStockProductoEnZona(productoId: number, zonaId: number)
 export async function getLogo(): Promise<string | null> {
   try {
     const config = await getConfiguracion()
-    return config?.logo || '/logo1.png' // Logo por defecto si no hay uno configurado
+    return config?.logo || null // Retorna el logo de la BD o null si no hay
   } catch (error) {
     console.error('Error al obtener logo:', error)
-    return '/logo1.png' // Logo por defecto en caso de error
+    return null // Retorna null en caso de error
   }
 }

@@ -94,30 +94,37 @@ export default function Footer() {
 
           {/* Columna 4: Contacto */}
           <div className="space-y-4">
-            <h3 className="text-lg font-bold border-b border-green-600 pb-2">Contacto</h3>
+            <h3 className="text-lg font-bold border-b border-green-600 pb-2">NUESTRAS SUCURSALES</h3>
             <div className="space-y-3">
-              <div className="flex items-start space-x-3">
-                <Phone className="size-4 text-violet-300 mt-1" />
+              <div className="space-y-3">
                 <div>
-                  <p className="text-white font-medium whitespace-nowrap">Central: 11 3093-8491</p>
-                  <p className="text-white font-medium whitespace-nowrap">Maschwitz: 11 3093-8487</p>
-                  <p className="text-white font-medium whitespace-nowrap">Matheu: 11 2850-5547</p>
-                  <p className="text-white font-medium whitespace-nowrap">Garin: 11 3093-8486</p>
-                  <p className="text-white font-medium whitespace-nowrap">Cardales: 11 3093-8483</p>
-                  <p className="text-white font-medium whitespace-nowrap">Capilla del Señor: 11 3093-8492</p>
+                  <p className="text-white font-medium text-sm">Sucursal Escobar</p>
+                  <p className="text-green-100 text-xs">E. Tapia de cruz 376 || 1130938491 - 8:30 a 19:30 hs</p>
+                </div>
+                <div>
+                  <p className="text-white font-medium text-sm">Sucursal Maschwitz</p>
+                  <p className="text-green-100 text-xs">Av. Villanueva 1656 || 1130938487 - 9 a 19 hs</p>
+                </div>
+                <div>
+                  <p className="text-white font-medium text-sm">Sucursal Matheu</p>
+                  <p className="text-green-100 text-xs">Av. Sarmiento 240 || 1128505547 - 8:30 a 13 y 15:30 a 19:30 hs</p>
+                </div>
+                <div>
+                  <p className="text-white font-medium text-sm">Sucursal Garin</p>
+                  <p className="text-green-100 text-xs">Belgrano y Suling || 1130938486 - 8:30 a 13 y 15:30 a 19:30 hs</p>
+                </div>
+                <div>
+                  <p className="text-white font-medium text-sm">Sucursal Cardales</p>
+                  <p className="text-green-100 text-xs">Av. San Martin 144 || 1130938483 - 8:30 a 13 y 15:30 a 19:30 hs</p>
+                </div>
+                <div>
+                  <p className="text-white font-medium text-sm">Sucursal Capilla del señor</p>
+                  <p className="text-green-100 text-xs">Belgrano y Moreno || 1130938492 - 8:30 a 13 y 15:30 a 19:30 hs</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3 pt-2 border-t border-green-600">
                 <Mail className="size-4 text-violet-300" />
-                <p className="text-green-100">info@MueblesCenter.com</p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Clock className="size-4 text-violet-300" />
-                <p className="text-green-100">Lun-Dom 9:00-18:00</p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <MapPin className="size-4 text-violet-300" />
-                <p className="text-green-100">Buenos Aires, Argentina</p>
+                <p className="text-green-100">mueblescenterweb@gmail.com.ar</p>
               </div>
             </div>
           </div>
