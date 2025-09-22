@@ -4,6 +4,7 @@ export interface Configuracion {
   id: number
   created_at: string
   telefono: string | null
+  logo: string | null
 }
 
 export interface ConfiguracionWeb {
@@ -275,5 +276,16 @@ export async function getStockProductoEnZona(productoId: number, zonaId: number)
   } catch (error) {
     console.error('Error al obtener stock del producto en zona:', error)
     return null
+  }
+}
+
+// Función para obtener el logo de la empresa
+export async function getLogo(): Promise<string | null> {
+  try {
+    const config = await getConfiguracion()
+    return config?.logo || '/logo1.png' // Logo por defecto si no hay uno configurado
+  } catch (error) {
+    console.error('Error al obtener logo:', error)
+    return '/logo1.png' // Logo por defecto en caso de error
   }
 }

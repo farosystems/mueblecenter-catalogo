@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { MapPin, Building2, CheckCircle } from "lucide-react"
 import { useZonas } from "@/hooks/use-zonas"
 import { useZonaContext } from "@/contexts/ZonaContext"
+import { getLogo } from "@/lib/supabase-config"
 import type { Zona } from "@/lib/supabase-config"
 
 interface ZonaSelectorModalProps {
@@ -16,6 +17,24 @@ export default function ZonaSelectorModal({ isOpen, onClose }: ZonaSelectorModal
   const { setZonaSeleccionada } = useZonaContext()
   const [selectedZona, setSelectedZona] = useState<Zona | null>(null)
   const [isSelecting, setIsSelecting] = useState(false)
+  const [logo, setLogo] = useState<string>('/logo1.png')
+
+  // Cargar logo cuando el modal se abra
+  useEffect(() => {
+    if (isOpen) {
+      const loadLogo = async () => {
+        try {
+          const logoUrl = await getLogo()
+          if (logoUrl) {
+            setLogo(logoUrl)
+          }
+        } catch (error) {
+          console.error('Error al cargar logo:', error)
+        }
+      }
+      loadLogo()
+    }
+  }, [isOpen])
 
   // Bloquear scroll del body cuando el modal está abierto
   useEffect(() => {
@@ -115,9 +134,20 @@ export default function ZonaSelectorModal({ isOpen, onClose }: ZonaSelectorModal
           
           <div className="relative">
             <div className="flex items-center justify-center mb-4">
-              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                <Building2 size={32} className="text-white" />
-              </div>
+              <img
+                src={logo}
+                alt="Logo"
+                className="w-32 h-32 object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.style.display = 'none'
+                  target.parentElement?.appendChild(
+                    Object.assign(document.createElement('div'), {
+                      innerHTML: '<svg class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'
+                    })
+                  )
+                }}
+              />
             </div>
             <h2 className="text-2xl font-bold text-center mb-2">¡Bienvenido!</h2>
             <p className="text-green-100 text-center text-sm leading-relaxed">
