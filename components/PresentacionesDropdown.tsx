@@ -41,7 +41,7 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
         for (const presentacion of presentacionesData) {
           try {
             const lineasData = await getLineasByPresentacion(presentacion.id)
-            console.log(`Presentación "${presentacion.nombre}": ${lineasData?.length || 0} líneas`)
+//             console.log(`Presentación "${presentacion.nombre}": ${lineasData?.length || 0} líneas`)
             
             if (lineasData && lineasData.length > 0) {
               presentacionesConLineasSet.add(presentacion.id)
@@ -64,8 +64,8 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
           }
         }
         
-        console.log(`Total presentaciones con líneas: ${presentacionesConLineasSet.size}`)
-        console.log(`Total líneas con tipos: ${lineasConTiposSet.size}`)
+//         console.log(`Total presentaciones con líneas: ${presentacionesConLineasSet.size}`)
+//         console.log(`Total líneas con tipos: ${lineasConTiposSet.size}`)
         setPresentacionesConLineas(presentacionesConLineasSet)
         setLineasConTipos(lineasConTiposSet)
       } catch (error) {

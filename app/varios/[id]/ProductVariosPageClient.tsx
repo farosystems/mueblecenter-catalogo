@@ -47,10 +47,10 @@ export default function ProductVariosPageClient({ params }: ProductVariosPageCli
         setLoading(true)
         setError(null)
         
-        console.log('🔍 Cargando producto con ID:', resolvedParams.id)
+        //console.log('🔍 Cargando producto con ID:', resolvedParams.id)
         const productData = await getProductById(resolvedParams.id)
         
-        console.log('🔍 Producto cargado:', productData)
+        //console.log('🔍 Producto cargado:', productData)
         
         if (!productData) {
           setError('Producto no encontrado')
@@ -156,10 +156,10 @@ export default function ProductVariosPageClient({ params }: ProductVariosPageCli
   const productDescription = product.descripcion_detallada || product.description || 'Sin descripción disponible'
 
   // Debug: Log para verificar las imágenes del producto
-  console.log('🔍 Producto completo:', product)
-  console.log('🔍 product.imagenes:', product.imagenes)
-  console.log('🔍 product.imagen:', product.imagen)
-  console.log('🔍 Array de imágenes que se pasa al componente:', product.imagenes || [product.imagen] || [])
+  // console.log('🔍 Producto completo:', product)
+  // console.log('🔍 product.imagenes:', product.imagenes)
+  // console.log('🔍 product.imagen:', product.imagen)
+  // console.log('🔍 Array de imágenes que se pasa al componente:', product.imagenes || [product.imagen] || [])
 
   return (
     <div className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">

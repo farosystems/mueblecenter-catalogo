@@ -5,7 +5,7 @@ import { Search, X, Package } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Product } from '@/lib/products'
-import { getProductsByZona, getPlanesProducto, calcularCuota } from '@/lib/supabase-products'
+import { getProductsByZona, getPlanesProducto, calcularCuota, searchProductsByZona } from '@/lib/supabase-products'
 import { formatearPrecio } from '@/lib/supabase-products'
 import { useZonaContext } from '@/contexts/ZonaContext'
 
@@ -29,7 +29,10 @@ export default function ProductSearch({ className = '' }: ProductSearchProps) {
     const loadProducts = async () => {
       setLoading(true)
       try {
+        //console.log('🔍 ProductSearch: Cargando productos para zona:', zonaSeleccionada?.id, zonaSeleccionada?.nombre)
         const productsData = await getProductsByZona(zonaSeleccionada?.id || null)
+        //console.log('🔍 ProductSearch: Productos cargados:', productsData.length)
+
         setProducts(productsData)
       } catch (error) {
         console.error('Error loading products:', error)
@@ -40,7 +43,7 @@ export default function ProductSearch({ className = '' }: ProductSearchProps) {
     loadProducts()
   }, [zonaSeleccionada])
 
-  // Filtrar productos cuando cambie el término de búsqueda
+  // Buscar productos cuando cambie el término de búsqueda (usando búsqueda directa en DB)
   useEffect(() => {
     if (!searchTerm.trim()) {
       setFilteredProducts([])
@@ -48,22 +51,33 @@ export default function ProductSearch({ className = '' }: ProductSearchProps) {
       return
     }
 
-    const filtered = products.filter(product => {
-      const name = product.descripcion?.toLowerCase() || ''
-      const description = product.descripcion_detallada?.toLowerCase() || ''
-      const category = product.categoria?.descripcion?.toLowerCase() || ''
-      const brand = product.marca?.descripcion?.toLowerCase() || ''
-      const searchLower = searchTerm.toLowerCase()
+    let timeoutId: NodeJS.Timeout
 
-      return name.includes(searchLower) || 
-             description.includes(searchLower) || 
-             category.includes(searchLower) || 
-             brand.includes(searchLower)
-         }).slice(0, 12) // Limitar a 12 resultados
+    const searchProducts = async () => {
+      setLoading(true)
+      try {
+        //console.log('🔍 ProductSearch: Realizando búsqueda directa para:', searchTerm)
+        const results = await searchProductsByZona(searchTerm, zonaSeleccionada?.id || null)
+        //console.log('🔍 ProductSearch: Resultados de búsqueda:', results.length)
 
-    setFilteredProducts(filtered)
-    setIsSearchOpen(filtered.length > 0)
-  }, [searchTerm, products])
+        setFilteredProducts(results.slice(0, 12)) // Limitar a 12 resultados
+        setIsSearchOpen(results.length > 0)
+      } catch (error) {
+        console.error('Error en búsqueda:', error)
+        setFilteredProducts([])
+        setIsSearchOpen(false)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    // Debounce la búsqueda para evitar demasiadas consultas
+    timeoutId = setTimeout(searchProducts, 300)
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId)
+    }
+  }, [searchTerm, zonaSeleccionada])
 
   // Cerrar búsqueda al hacer clic fuera
   useEffect(() => {

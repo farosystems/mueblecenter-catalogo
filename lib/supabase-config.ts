@@ -231,6 +231,8 @@ export async function getStockPorZona(zonaId: number): Promise<StockSucursal[]> 
 // Función para obtener productos con stock disponible en una zona
 export async function getProductosConStockEnZona(zonaId: number): Promise<number[]> {
   try {
+    //console.log('🔍 getProductosConStockEnZona: Consultando zona:', zonaId)
+
     // Obtener todos los registros de stock de la zona y filtrar en JavaScript
     const { data, error } = await supabase
       .from('stock_sucursales')
@@ -238,16 +240,30 @@ export async function getProductosConStockEnZona(zonaId: number): Promise<number
       .eq('fk_id_zona', zonaId)
       .eq('activo', true)
       .gte('stock', 0) // Solo productos con stock no negativo
+      .range(0, 9999) // Obtener hasta 10,000 registros de stock
 
     if (error) {
       console.error('Error al obtener productos con stock en zona:', error)
       return []
     }
 
-    // Filtrar productos donde stock > stock_minimo
-    const productosConStock = data?.filter(item => 
-      item.stock > (item.stock_minimo || 0)
+    //console.log('🔍 getProductosConStockEnZona: Registros encontrados:', data?.length || 0)
+
+    // Filtrar productos donde stock > 0 (sin considerar stock_minimo)
+    const productosConStock = data?.filter(item =>
+      item.stock > 0
     ) || []
+
+    console.log('🔍 getProductosConStockEnZona: Productos con stock > 0:', productosConStock.length)
+
+    // Debug: mostrar algunos ejemplos
+    if (productosConStock.length > 0) {
+      console.log('🔍 getProductosConStockEnZona: Ejemplos de stock:', productosConStock.slice(0, 5).map(item => ({
+        id: item.fk_id_producto,
+        stock: item.stock,
+        stock_minimo: item.stock_minimo
+      })))
+    }
 
     return productosConStock.map(item => item.fk_id_producto)
   } catch (error) {
@@ -265,14 +281,15 @@ export async function getStockProductoEnZona(productoId: number, zonaId: number)
       .eq('fk_id_producto', productoId)
       .eq('fk_id_zona', zonaId)
       .eq('activo', true)
-      .maybeSingle()
+      .order('stock', { ascending: false })
+      .limit(1)
 
     if (error) {
       console.error('Error al obtener stock del producto en zona:', error)
       return null
     }
 
-    return data
+    return data && data.length > 0 ? data[0] : null
   } catch (error) {
     console.error('Error al obtener stock del producto en zona:', error)
     return null

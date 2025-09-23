@@ -7,6 +7,8 @@ import Footer from "@/components/Footer"
 import ProductCard from "@/components/ProductCard"
 import Pagination from "@/components/Pagination"
 import { useProducts } from "@/hooks/use-products"
+import { searchProductsByZona } from "@/lib/supabase-products"
+import { Product } from "@/lib/products"
 import { useZonaContext } from "@/contexts/ZonaContext"
 
 const PRODUCTS_PER_PAGE = 6
@@ -15,13 +17,23 @@ export default function BuscarPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [animateProducts, setAnimateProducts] = useState(false)
+  const [searchResults, setSearchResults] = useState<Product[]>([])
+  const [searchLoading, setSearchLoading] = useState(false)
   const { zonaSeleccionada } = useZonaContext()
 
-  const { 
-    products, 
-    loading, 
-    error 
+  const {
+    products,
+    loading,
+    error
   } = useProducts({ zonaId: zonaSeleccionada?.id || null })
+
+  // Debug: verificar productos cargados en la página de búsqueda
+  // useEffect(() => {
+  //   if (products.length > 0) {
+  //     console.log('🔍 BuscarPage: Productos cargados:', products.length)
+  //     console.log('🔍 BuscarPage: Zona seleccionada:', zonaSeleccionada?.id, zonaSeleccionada?.nombre)
+  //   }
+  // }, [products, zonaSeleccionada])
 
   // Obtener parámetros de la URL
   useEffect(() => {
@@ -33,23 +45,38 @@ export default function BuscarPage() {
     }
   }, [])
 
-  // Filtrar productos por búsqueda global
-  const filteredProducts = useMemo(() => {
-    if (!searchTerm.trim()) return []
-    
-    return products.filter((product) => {
-      const productName = product.descripcion || ''
-      const productDescription = product.descripcion_detallada || ''
-      const categoryName = product.categoria?.descripcion || ''
-      const brandName = product.marca?.descripcion || ''
-      const searchLower = searchTerm.toLowerCase()
+  // Realizar búsqueda directa en la base de datos
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSearchResults([])
+      return
+    }
 
-      return productName.toLowerCase().includes(searchLower) ||
-             productDescription.toLowerCase().includes(searchLower) ||
-             categoryName.toLowerCase().includes(searchLower) ||
-             brandName.toLowerCase().includes(searchLower)
-    })
-  }, [products, searchTerm])
+    let timeoutId: NodeJS.Timeout
+
+    const performSearch = async () => {
+      setSearchLoading(true)
+      try {
+        const results = await searchProductsByZona(searchTerm, zonaSeleccionada?.id || null)
+        setSearchResults(results)
+      } catch (error) {
+        console.error('Error en búsqueda:', error)
+        setSearchResults([])
+      } finally {
+        setSearchLoading(false)
+      }
+    }
+
+    // Debounce la búsqueda para evitar demasiadas consultas
+    timeoutId = setTimeout(performSearch, 300)
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId)
+    }
+  }, [searchTerm, zonaSeleccionada])
+
+  // Usar resultados de búsqueda en lugar del filtrado local
+  const filteredProducts = searchResults
 
   // Calcular paginación
   const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE)
@@ -96,7 +123,7 @@ export default function BuscarPage() {
     window.history.replaceState({}, '', url.toString())
   }
 
-  if (loading) {
+  if (loading || searchLoading) {
     return (
       <div className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
         <GlobalAppBar />

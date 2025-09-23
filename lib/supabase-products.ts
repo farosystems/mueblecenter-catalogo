@@ -139,7 +139,7 @@ export async function getPlanesProducto(productoId: string): Promise<PlanFinanci
         }
       }
     } catch (error) {
-      console.log('⚠️ getPlanesProducto: Error al buscar planes especiales (tabla puede no existir):', error)
+//       console.log('⚠️ getPlanesProducto: Error al buscar planes especiales (tabla puede no existir):', error)
     }
 
     // 2. PRIORIDAD BAJA: Si no hay planes especiales, usar planes por defecto
@@ -173,7 +173,7 @@ export async function getPlanesProducto(productoId: string): Promise<PlanFinanci
         }
       }
     } catch (error) {
-      console.log('⚠️ getPlanesProducto: Error al buscar planes por defecto (tabla puede no existir):', error)
+//       console.log('⚠️ getPlanesProducto: Error al buscar planes por defecto (tabla puede no existir):', error)
     }
 
     // 3. FALLBACK: Si no hay planes especiales ni por defecto, no mostrar ningún plan
@@ -213,20 +213,22 @@ export async function getProducts(): Promise<Product[]> {
   try {
     // Obtener todos los productos sin JOIN para asegurar que no se pierdan productos
     // Excluir productos con precio 0
-    const { data, error } = await supabase
+    // IMPORTANTE: Con más de 10K productos, necesitamos usar range para obtener todos
+    const { data, error, count } = await supabase
       .from('productos')
-      .select('*')
+      .select('*', { count: 'exact' })
       .gt('precio', 0)
       .eq('activo', true)
       .order('destacado', { ascending: false })
       .order('descripcion', { ascending: true })
+      .range(0, 9999) // Obtener hasta 10,000 productos (rango máximo de Supabase)
 
     if (error) {
       console.error('Error fetching products:', error)
       return []
     }
 
-    //console.log('🔍 getProducts - Total productos obtenidos:', data?.length || 0)
+    //console.log('🔍 getProducts - Total productos obtenidos:', data?.length || 0, 'de', count || 0)
 
     // Obtener categorías y marcas por separado para hacer el mapeo manualmente
     const { data: categories, error: categoriesError } = await supabase
@@ -536,20 +538,20 @@ export async function getProductById(id: string): Promise<Product | null> {
 
 export async function getCategories(): Promise<Categoria[]> {
   try {
-    console.log('🔍 getCategories: Intentando obtener categorías...')
+//     console.log('🔍 getCategories: Intentando obtener categorías...')
     const { data, error } = await supabase
       .from('categorias')
       .select('*')
       .order('descripcion', { ascending: true })
 
-    console.log('🔍 getCategories: Respuesta de Supabase:', { data, error })
+//     console.log('🔍 getCategories: Respuesta de Supabase:', { data, error })
 
     if (error) {
       console.error('❌ Error fetching categories:', error)
       return []
     }
 
-    console.log('✅ getCategories: Datos obtenidos:', data)
+//     console.log('✅ getCategories: Datos obtenidos:', data)
     return data || []
   } catch (error) {
     console.error('❌ Error fetching categories:', error)
@@ -596,7 +598,7 @@ export async function getTipoPlanesProducto(productoId: string): Promise<'especi
         return 'especiales'
       }
     } catch (error) {
-      console.log('⚠️ getTipoPlanesProducto: Error al verificar planes especiales (tabla puede no existir):', error)
+//       console.log('⚠️ getTipoPlanesProducto: Error al verificar planes especiales (tabla puede no existir):', error)
     }
 
     // 2. Verificar planes por defecto
@@ -651,6 +653,93 @@ export async function getProductsByZona(zonaId: number | null = null): Promise<P
   return filtrarProductosPorZona(productos, zonaId)
 }
 
+// Nueva función para búsqueda directa en DB con filtro por zona
+export async function searchProductsByZona(searchTerm: string, zonaId: number | null = null): Promise<Product[]> {
+  try {
+    if (!searchTerm.trim()) return []
+
+    console.log('🔍 searchProductsByZona: Buscando:', searchTerm, 'en zona:', zonaId)
+
+    // Buscar productos directamente en la BD
+    const searchWords = searchTerm.toLowerCase().trim().split(/\s+/).filter(word => word.length > 0)
+    console.log('🔍 searchProductsByZona: Palabras de búsqueda:', searchWords)
+
+    if (zonaId) {
+      // NUEVA ESTRATEGIA: Hacer un JOIN directo con stock_sucursales
+      console.log('🔍 searchProductsByZona: Usando JOIN directo con stock_sucursales')
+
+      let query = supabase
+        .from('productos')
+        .select(`
+          *,
+          categoria:categorias(id, descripcion, created_at),
+          marca:marcas(id, descripcion, created_at, logo),
+          stock_sucursales!inner(stock, stock_minimo)
+        `)
+        .gt('precio', 0)
+        .eq('activo', true)
+        .eq('stock_sucursales.fk_id_zona', zonaId)
+        .eq('stock_sucursales.activo', true)
+        .gt('stock_sucursales.stock', 0)
+        .not('imagen', 'is', null)
+        .neq('imagen', '')
+
+      // Buscar por cada palabra en descripcion
+      searchWords.forEach(word => {
+        query = query.ilike('descripcion', `%${word}%`)
+      })
+
+      const { data, error } = await query
+        .order('destacado', { ascending: false })
+        .order('descripcion', { ascending: true })
+        .limit(50)
+
+      if (error) {
+        console.error('Error en búsqueda con JOIN:', error)
+        return []
+      }
+
+      console.log('🔍 searchProductsByZona: Productos encontrados con JOIN:', data?.length || 0)
+      return data || []
+
+    } else {
+      // Sin zona, búsqueda normal
+      let query = supabase
+        .from('productos')
+        .select(`
+          *,
+          categoria:categorias(id, descripcion, created_at),
+          marca:marcas(id, descripcion, created_at, logo)
+        `)
+        .gt('precio', 0)
+        .eq('activo', true)
+        .not('imagen', 'is', null)
+        .neq('imagen', '')
+
+      // Buscar por cada palabra en descripcion
+      searchWords.forEach(word => {
+        query = query.ilike('descripcion', `%${word}%`)
+      })
+
+      const { data, error } = await query
+        .order('destacado', { ascending: false })
+        .order('descripcion', { ascending: true })
+        .limit(50)
+
+      if (error) {
+        console.error('Error en búsqueda sin zona:', error)
+        return []
+      }
+
+      console.log('🔍 searchProductsByZona: Productos encontrados sin zona:', data?.length || 0)
+      return data || []
+    }
+  } catch (error) {
+    console.error('Error en búsqueda de productos:', error)
+    return []
+  }
+}
+
 // Versión modificada de getFeaturedProducts que filtra por zona
 export async function getFeaturedProductsByZona(zonaId: number | null = null): Promise<Product[]> {
   const productos = await getFeaturedProducts()
@@ -674,7 +763,7 @@ export async function getProductsByBrandAndZona(brandId: number, zonaId: number 
 // Obtener todas las presentaciones activas
 export async function getPresentaciones(): Promise<Presentacion[]> {
   try {
-    console.log('🔍 getPresentaciones: Intentando obtener presentaciones...')
+//     console.log('🔍 getPresentaciones: Intentando obtener presentaciones...')
     
     // Obtener todas las presentaciones activas (el filtrado por líneas se hará después)
     const { data, error } = await supabase
@@ -691,14 +780,14 @@ export async function getPresentaciones(): Promise<Presentacion[]> {
       .eq('activo', true)
       .order('nombre', { ascending: true })
 
-    console.log('🔍 getPresentaciones: Respuesta de Supabase:', { data, error })
+//     console.log('🔍 getPresentaciones: Respuesta de Supabase:', { data, error })
 
     if (error) {
       console.error('❌ Error fetching presentaciones:', error)
       return []
     }
 
-    console.log('✅ getPresentaciones: Datos obtenidos:', data || [])
+//     console.log('✅ getPresentaciones: Datos obtenidos:', data || [])
     return data || []
   } catch (error) {
     console.error('❌ Error fetching presentaciones:', error)
@@ -709,7 +798,7 @@ export async function getPresentaciones(): Promise<Presentacion[]> {
 // Obtener todas las líneas activas por presentación (independientemente de si tienen tipos o no)
 export async function getLineasByPresentacion(presentacionId: string): Promise<Linea[]> {
   try {
-    console.log('🔍 getLineasByPresentacion: Buscando líneas para presentación:', presentacionId)
+//     console.log('🔍 getLineasByPresentacion: Buscando líneas para presentación:', presentacionId)
     
     // Obtener TODAS las líneas activas de la presentación
     const { data, error } = await supabase
@@ -732,7 +821,7 @@ export async function getLineasByPresentacion(presentacionId: string): Promise<L
       return []
     }
 
-    console.log('✅ getLineasByPresentacion: Datos obtenidos:', data || [])
+//     console.log('✅ getLineasByPresentacion: Datos obtenidos:', data || [])
     return data || []
   } catch (error) {
     console.error('❌ Error fetching líneas:', error)
@@ -743,7 +832,7 @@ export async function getLineasByPresentacion(presentacionId: string): Promise<L
 // Obtener tipos por línea
 export async function getTiposByLinea(lineaId: string): Promise<Tipo[]> {
   try {
-    console.log('🔍 getTiposByLinea: Buscando tipos para línea:', lineaId)
+//     console.log('🔍 getTiposByLinea: Buscando tipos para línea:', lineaId)
     
     const { data, error } = await supabase
       .from('tipos')
@@ -757,7 +846,7 @@ export async function getTiposByLinea(lineaId: string): Promise<Tipo[]> {
       return []
     }
 
-    console.log('✅ getTiposByLinea: Datos obtenidos:', data)
+//     console.log('✅ getTiposByLinea: Datos obtenidos:', data)
     return data || []
   } catch (error) {
     console.error('❌ Error fetching tipos:', error)
@@ -773,7 +862,7 @@ export async function getProductsByHierarchy(
   zonaId: number | null = null
 ): Promise<Product[]> {
   try {
-    console.log('🔍 getProductsByHierarchy:', { presentacionId, lineaId, tipoId, zonaId })
+//     console.log('🔍 getProductsByHierarchy:', { presentacionId, lineaId, tipoId, zonaId })
     
     let query = supabase
       .from('productos')
@@ -924,7 +1013,7 @@ export async function getAllTipos(): Promise<Tipo[]> {
 // Obtener presentaciones que tienen productos asociados
 export async function getPresentacionesConProductos(): Promise<Presentacion[]> {
   try {
-    console.log('🔍 getPresentacionesConProductos: Obteniendo presentaciones con productos...')
+//     console.log('🔍 getPresentacionesConProductos: Obteniendo presentaciones con productos...')
 
     // Query para obtener presentaciones que tienen productos activos
     const { data, error } = await supabase
@@ -966,7 +1055,7 @@ export async function getPresentacionesConProductos(): Promise<Presentacion[]> {
       return acc
     }, [] as Presentacion[]) || []
 
-    console.log('✅ getPresentacionesConProductos: Presentaciones con productos:', presentacionesUnicas.length)
+//     console.log('✅ getPresentacionesConProductos: Presentaciones con productos:', presentacionesUnicas.length)
     return presentacionesUnicas
 
   } catch (error) {

@@ -83,13 +83,13 @@ export default function ProductPageClient({
         setLoading(true)
         setError(null)
         
-        console.log('🔍 Loading product with ID:', resolvedParams.id)
-        console.log('🔍 Hierarchy type:', hierarchyType)
-        console.log('🔍 Category slug:', resolvedParams.categoria)
+//         console.log('🔍 Loading product with ID:', resolvedParams.id)
+//         console.log('🔍 Hierarchy type:', hierarchyType)
+//         console.log('🔍 Category slug:', resolvedParams.categoria)
         
         const productData = await getProductById(resolvedParams.id)
         
-        console.log('🔍 Product data loaded:', productData)
+//         console.log('🔍 Product data loaded:', productData)
         
         if (!productData) {
           setError('Producto no encontrado')
@@ -98,9 +98,9 @@ export default function ProductPageClient({
 
         // Verificar que el producto pertenece a la categoría/jerarquía correcta solo para categorías tradicionales
         if (hierarchyType === 'categoria' && productData.fk_id_categoria !== categoria?.id) {
-          console.log('🔍 Product category validation failed')
-          console.log('🔍 Product category ID:', productData.fk_id_categoria)
-          console.log('🔍 Expected category ID:', categoria?.id)
+//           console.log('🔍 Product category validation failed')
+//           console.log('🔍 Product category ID:', productData.fk_id_categoria)
+//           console.log('🔍 Expected category ID:', categoria?.id)
           setError('El producto no pertenece a esta categoría')
           return
         }
@@ -111,7 +111,7 @@ export default function ProductPageClient({
           
           // Si no hay registro de stock o el stock es 0, redirigir al home
           if (!stockData || stockData.stock <= 0) {
-            console.log('🚫 Producto sin stock en zona seleccionada, redirigiendo al home...')
+//             console.log('🚫 Producto sin stock en zona seleccionada, redirigiendo al home...')
             router.push('/')
             return
           }

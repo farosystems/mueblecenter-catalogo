@@ -77,8 +77,8 @@ export default function CategoriaPage({ params }: CategoriaPageProps) {
 
   // Debug: Log para verificar que los datos se cargan
   useEffect(() => {
-    console.log('🔍 Categoría encontrada:', categoria?.descripcion)
-    console.log('🔍 Productos filtrados:', filteredProducts.length)
+//     console.log('🔍 Categoría encontrada:', categoria?.descripcion)
+//     console.log('🔍 Productos filtrados:', filteredProducts.length)
   }, [categoria, filteredProducts])
 
   // Calcular paginación

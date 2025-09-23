@@ -48,14 +48,14 @@ export default function ProductsSection() {
 
   // Debug inicial del componente
   useEffect(() => {
-    console.log('🔍 ProductsSection - Debug inicial')
+//     console.log('🔍 ProductsSection - Debug inicial')
     debugPriceRangeIssue()
     debugActiveFilters(searchTerm, selectedCategory, selectedBrand, [0, 1000000])
   }, [])
 
   // Filtrar productos localmente (búsqueda y solo excluir precio = 0)
   const filteredProducts = useMemo(() => {
-    console.log('🔍 ProductsSection - Filtrando productos:', {
+//     console.log('🔍 ProductsSection - Filtrando productos:', {
       totalProducts: products.length,
       searchTerm,
       selectedCategory,
@@ -88,7 +88,7 @@ export default function ProductsSection() {
 
       // Debug para productos específicos (solo los primeros 5 para no saturar la consola)
       if (searchTerm && !matchesSearch && productosExcluidosPorBusqueda <= 5) {
-        console.log('🔍 Producto no coincide con búsqueda:', {
+//         console.log('🔍 Producto no coincide con búsqueda:', {
           id: product.id,
           name: productName,
           description: productDescription,
@@ -98,7 +98,7 @@ export default function ProductsSection() {
       }
 
       if (!precioValido && productosExcluidosPorPrecioCero <= 5) {
-        console.log('🔍 Producto excluido por precio = 0:', {
+//         console.log('🔍 Producto excluido por precio = 0:', {
           id: product.id,
           name: productName,
           price: productPrice
@@ -108,7 +108,7 @@ export default function ProductsSection() {
       return precioValido && matchesSearch
     })
 
-    console.log('🔍 ProductsSection - Resumen de filtrado:', {
+//     console.log('🔍 ProductsSection - Resumen de filtrado:', {
       totalProducts: products.length,
       totalFiltered: filtered.length,
       productosExcluidosPorPrecioCero,

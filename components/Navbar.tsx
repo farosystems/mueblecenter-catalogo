@@ -14,15 +14,15 @@ export default function Navbar() {
   useEffect(() => {
     const loadLogo = async () => {
       try {
-        console.log('Navbar: Intentando cargar logo...')
+//         console.log('Navbar: Intentando cargar logo...')
         const logoUrl = await getLogo()
-        console.log('Navbar: Logo obtenido:', logoUrl)
+//         console.log('Navbar: Logo obtenido:', logoUrl)
         // Si hay logo configurado en la BD, usarlo; sino mantener el por defecto
         if (logoUrl) {
-          console.log('Navbar: Actualizando logo a:', logoUrl)
+//           console.log('Navbar: Actualizando logo a:', logoUrl)
           setLogo(logoUrl)
         } else {
-          console.log('Navbar: No hay logo configurado, manteniendo por defecto')
+//           console.log('Navbar: No hay logo configurado, manteniendo por defecto')
         }
         // Si logoUrl es null, mantiene '/logo1.png' por defecto
       } catch (error) {
@@ -48,7 +48,7 @@ export default function Navbar() {
     setIsOpen(false)
   }
 
-  console.log('Navbar: Renderizando con logo:', logo)
+//   console.log('Navbar: Renderizando con logo:', logo)
 
   return (
     <nav

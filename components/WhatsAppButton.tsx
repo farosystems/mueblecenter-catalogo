@@ -43,13 +43,13 @@ export default function WhatsAppButton({ product, onSuccess }: WhatsAppButtonPro
   // Función para generar el mensaje de WhatsApp
   const generateWhatsAppMessage = (product: Product): string => {
     // Debug: verificar qué tipo de producto es
-    console.log('🔍 Generando mensaje para producto:', product)
-    console.log('🔍 Tiene descripcion_detallada:', !!product.descripcion_detallada)
-    console.log('🔍 Descripción incluye "Lista de":', product.descripcion?.includes('Lista de'))
+//     console.log('🔍 Generando mensaje para producto:', product)
+//     console.log('🔍 Tiene descripcion_detallada:', !!product.descripcion_detallada)
+//     console.log('🔍 Descripción incluye "Lista de":', product.descripcion?.includes('Lista de'))
     
     // Verificar si es un producto virtual de lista (tiene descripcion_detallada)
     if (product.descripcion_detallada && product.descripcion?.includes('Lista de')) {
-      console.log('🔍 Detectado producto virtual de lista')
+//       console.log('🔍 Detectado producto virtual de lista')
       let message = `Hola! 👋 Me interesa consultar sobre los siguientes productos:\n\n`
       
       // Usar la descripción detallada que contiene la lista de productos
@@ -57,7 +57,7 @@ export default function WhatsAppButton({ product, onSuccess }: WhatsAppButtonPro
       
       message += `\n\n¿Podrían brindarme más información sobre estos productos?`
       
-      console.log('🔍 Mensaje generado:', message)
+//       console.log('🔍 Mensaje generado:', message)
       return message
     }
     

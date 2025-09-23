@@ -47,8 +47,8 @@ export default function ShoppingListModal({ isOpen, onClose }: ShoppingListModal
   }
 
   // Debug: verificar que el producto virtual se crea correctamente
-  console.log('🔍 Producto virtual creado:', virtualProduct)
-  console.log('🔍 Descripción detallada:', virtualProduct.descripcion_detallada)
+//   console.log('🔍 Producto virtual creado:', virtualProduct)
+//   console.log('🔍 Descripción detallada:', virtualProduct.descripcion_detallada)
 
   const handleClearList = () => {
     clearList()

@@ -93,15 +93,15 @@ export default function CategoriasPage() {
 
   useEffect(() => {
     const loadCategories = async () => {
-      console.log('📦 CategoriasPage: Iniciando carga de categorías...')
+//       console.log('📦 CategoriasPage: Iniciando carga de categorías...')
       try {
         const categoriesData = await getCategories()
-        console.log('📦 CategoriasPage: Categorías recibidas:', categoriesData.length)
+//         console.log('📦 CategoriasPage: Categorías recibidas:', categoriesData.length)
         setCategories(categoriesData)
       } catch (error) {
         console.error('❌ CategoriasPage: Error loading categories:', error)
       } finally {
-        console.log('📦 CategoriasPage: Finalizando carga (setLoading(false))')
+//         console.log('📦 CategoriasPage: Finalizando carga (setLoading(false))')
         setLoading(false)
       }
     }
