@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   keywords: "electrodomésticos, cuotas, financiación, heladeras, lavarropas, aires acondicionados",
   generator: 'v0.dev',
   icons: {
-    icon: '/logo1.png',
+    icon: '/logo.png',
   },
   openGraph: {
     type: 'website',

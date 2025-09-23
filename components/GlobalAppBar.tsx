@@ -15,7 +15,7 @@ export default function GlobalAppBar() {
   const [isMobilePresentacionesOpen, setIsMobilePresentacionesOpen] = useState(false)
   const [isShoppingListOpen, setIsShoppingListOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [logo, setLogo] = useState<string>('/logo1.png')
+  const [logo, setLogo] = useState<string>('/logo.png')
   const { itemCount } = useShoppingList()
   const { zonaSeleccionada, clearZona } = useZonaContext()
 
@@ -69,7 +69,7 @@ export default function GlobalAppBar() {
                     className="h-16 sm:h-20 lg:h-32 w-auto transition-transform duration-300 group-hover:scale-110"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement
-                      target.src = '/logo1.png'
+                      target.src = '/logo.png'
                     }}
                   />
                   <div className="absolute inset-0 bg-green-400 opacity-0 group-hover:opacity-10 rounded-lg transition-opacity duration-300"></div>

@@ -8,7 +8,7 @@ import { getLogo } from "@/lib/supabase-config"
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
-  const [logo, setLogo] = useState<string>('/logo1.png')
+  const [logo, setLogo] = useState<string>('/logo.png')
 
   // Cargar logo
   useEffect(() => {
@@ -24,7 +24,7 @@ export default function Navbar() {
         } else {
 //           console.log('Navbar: No hay logo configurado, manteniendo por defecto')
         }
-        // Si logoUrl es null, mantiene '/logo1.png' por defecto
+        // Si logoUrl es null, mantiene '/logo.png' por defecto
       } catch (error) {
         console.error('Navbar: Error al cargar logo:', error)
       }
@@ -70,7 +70,7 @@ export default function Navbar() {
                 style={{ height: '24px', width: 'auto', maxWidth: '80px' }}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
-                  target.src = '/logo1.png'
+                  target.src = '/logo.png'
                 }}
               />
             </Link>
