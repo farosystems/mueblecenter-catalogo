@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react"
 import { useConfiguracion } from "@/hooks/use-configuracion"
+import { useZonaContext } from "@/contexts/ZonaContext"
 import { Card } from "@/components/ui/card"
 
 export default function BannersSection() {
   const { banners, loading, error } = useConfiguracion()
+  const { zonaSeleccionada } = useZonaContext()
   const [currentBanner, setCurrentBanner] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
@@ -23,6 +25,29 @@ export default function BannersSection() {
         setIsAnimating(false)
       }, 500)
     }
+  }
+
+  // Función para obtener el número de WhatsApp según la zona
+  const getWhatsAppNumber = () => {
+    if (!zonaSeleccionada) return '1130938491' // Default: Escobar
+
+    const whatsappMap: Record<string, string> = {
+      'Escobar': '1130938491',
+      'Maschwitz': '1130938487',
+      'Matheu': '1128505547',
+      'Garin': '1130938486',
+      'Cardales': '1130938483',
+      'Capilla del señor': '1130938492'
+    }
+
+    return whatsappMap[zonaSeleccionada.nombre || ''] || '1130938491'
+  }
+
+  // Función para abrir WhatsApp cuando se hace clic en el banner
+  const handleBannerClick = () => {
+    const phoneNumber = getWhatsAppNumber()
+    const message = encodeURIComponent('Hola, me gustaría obtener más información acerca de los créditos personales')
+    window.open(`https://wa.me/549${phoneNumber}?text=${message}`, '_blank')
   }
 
   useEffect(() => {
@@ -64,10 +89,16 @@ export default function BannersSection() {
           <div className="relative overflow-hidden rounded-2xl shadow-2xl bg-white/10 backdrop-blur-sm border border-white/20 p-4">
             {/* Banner principal */}
             <div className="relative w-full rounded-xl overflow-hidden shadow-xl">
-              <div className="relative flex transition-transform duration-500 ease-in-out" 
+              <div className="relative flex transition-transform duration-500 ease-in-out"
                    style={{ transform: `translateX(-${currentBanner * 100}%)` }}>
                 {banners.map((banner, index) => (
-                  <div key={index} className="w-full flex-shrink-0 bg-white flex items-center justify-center min-h-[200px]">
+                  <div
+                    key={index}
+                    className={`w-full flex-shrink-0 bg-white flex items-center justify-center min-h-[200px] ${
+                      index === 0 ? 'cursor-pointer hover:opacity-95 transition-opacity' : ''
+                    }`}
+                    onClick={index === 0 ? handleBannerClick : undefined}
+                  >
                     <img
                       src={banner}
                       alt={`Banner ${index + 1}`}
