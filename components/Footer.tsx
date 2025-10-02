@@ -2,13 +2,38 @@
 
 import Link from "next/link"
 import { Home, Package, Zap, Phone, Mail, Clock, MapPin, Shield, CreditCard, Truck } from "lucide-react"
+import { useZonaContext } from "@/contexts/ZonaContext"
 
 export default function Footer() {
+  const { zonaSeleccionada } = useZonaContext()
+
   const scrollToProducts = () => {
     const productsSection = document.getElementById('productos')
     if (productsSection) {
       productsSection.scrollIntoView({ behavior: 'smooth' })
     }
+  }
+
+  // Mapeo de zonas a números de WhatsApp
+  const getWhatsAppNumber = () => {
+    if (!zonaSeleccionada) return '1130938491' // Default: Escobar
+
+    const whatsappMap: Record<string, string> = {
+      'Escobar': '1130938491',
+      'Maschwitz': '1130938487',
+      'Matheu': '1128505547',
+      'Garin': '1130938486',
+      'Cardales': '1130938483',
+      'Capilla del señor': '1130938492'
+    }
+
+    return whatsappMap[zonaSeleccionada.nombre || ''] || '1130938491'
+  }
+
+  const handleCentroAyuda = () => {
+    const phoneNumber = getWhatsAppNumber()
+    const message = encodeURIComponent('Hola, necesito ayuda con...')
+    window.open(`https://wa.me/549${phoneNumber}?text=${message}`, '_blank')
   }
 
   return (
@@ -71,9 +96,12 @@ export default function Footer() {
             <h3 className="text-lg font-bold border-b border-green-600 pb-2">Soporte</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/ayuda" className="text-green-100 hover:text-white transition-colors duration-300">
+                <button
+                  onClick={handleCentroAyuda}
+                  className="text-green-100 hover:text-white transition-colors duration-300"
+                >
                   Centro de ayuda
-                </Link>
+                </button>
               </li>
               <li>
                 <Link href="/terminos" className="text-green-100 hover:text-white transition-colors duration-300">
