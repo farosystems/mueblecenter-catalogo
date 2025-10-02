@@ -7,8 +7,9 @@ import Link from 'next/link'
 import GlobalAppBar from '@/components/GlobalAppBar'
 import Footer from '@/components/Footer'
 import { ZonaGuard } from '@/components/ZonaGuard'
-import { 
-  Home, 
+import { useZonaContext } from '@/contexts/ZonaContext'
+import {
+  Home,
   Package,
   ArrowRight
 } from 'lucide-react'
@@ -16,12 +17,13 @@ import {
 export default function PresentacionesPage() {
   const [presentaciones, setPresentaciones] = useState<Presentacion[]>([])
   const [loading, setLoading] = useState(true)
+  const { zonaSeleccionada } = useZonaContext()
 
   useEffect(() => {
     const loadPresentaciones = async () => {
       console.log('📦 PresentacionesPage: Iniciando carga de presentaciones...')
       try {
-        const presentacionesData = await getPresentacionesConProductos()
+        const presentacionesData = await getPresentacionesConProductos(zonaSeleccionada?.id || null)
         console.log('📦 PresentacionesPage: Presentaciones recibidas:', presentacionesData.length)
         setPresentaciones(presentacionesData)
       } catch (error) {
@@ -31,9 +33,9 @@ export default function PresentacionesPage() {
         setLoading(false)
       }
     }
-    
+
     loadPresentaciones()
-  }, [])
+  }, [zonaSeleccionada])
 
   if (loading) {
     return (

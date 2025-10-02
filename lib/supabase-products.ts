@@ -219,6 +219,8 @@ export async function getProducts(): Promise<Product[]> {
       .select('*', { count: 'exact' })
       .gt('precio', 0)
       .eq('activo', true)
+      .not('imagen', 'is', null)
+      .neq('imagen', '')
       .order('destacado', { ascending: false })
       .order('descripcion', { ascending: true })
       .range(0, 9999) // Obtener hasta 10,000 productos (rango máximo de Supabase)
@@ -869,6 +871,8 @@ export async function getProductsByHierarchy(
       .select('*')
       .gt('precio', 0)
       .eq('activo', true)
+      .not('imagen', 'is', null)
+      .neq('imagen', '')
 
     // Aplicar filtros según los parámetros
     if (presentacionId) {
@@ -1010,53 +1014,138 @@ export async function getAllTipos(): Promise<Tipo[]> {
   }
 }
 
-// Obtener presentaciones que tienen productos asociados
-export async function getPresentacionesConProductos(): Promise<Presentacion[]> {
+// Obtener presentaciones que tienen productos asociados (opcionalmente filtrado por zona)
+export async function getPresentacionesConProductos(zonaId?: number | null): Promise<Presentacion[]> {
   try {
-//     console.log('🔍 getPresentacionesConProductos: Obteniendo presentaciones con productos...')
-
-    // Query para obtener presentaciones que tienen productos activos
-    const { data, error } = await supabase
+    // Primero obtener todas las presentaciones activas
+    const { data: presentaciones, error: errorPresentaciones } = await supabase
       .from('presentaciones')
-      .select(`
-        id,
-        nombre,
-        descripcion,
-        imagen,
-        activo,
-        created_at,
-        updated_at,
-        lineas!inner(
-          tipos!inner(
-            productos!inner(id)
-          )
-        )
-      `)
+      .select('id, nombre, descripcion, imagen, activo, created_at, updated_at')
       .eq('activo', true)
-      .eq('lineas.activo', true)
-      .eq('lineas.tipos.activo', true)
-      .eq('lineas.tipos.productos.activo', true)
-      .gt('lineas.tipos.productos.precio', 0)
       .order('nombre', { ascending: true })
 
-    if (error) {
-      console.error('❌ Error fetching presentaciones con productos:', error)
+    if (errorPresentaciones) {
+      console.error('❌ Error fetching presentaciones:', errorPresentaciones)
       return []
     }
 
-    // Filtrar duplicados de presentaciones (pueden aparecer múltiples veces debido al JOIN)
-    const presentacionesUnicas = data?.reduce((acc, current) => {
-      const existe = acc.find(item => item.id === current.id)
-      if (!existe) {
-        // Limpiar el objeto para que no tenga las relaciones anidadas
-        const { lineas, ...presentacionLimpia } = current
-        acc.push(presentacionLimpia)
-      }
-      return acc
-    }, [] as Presentacion[]) || []
+    if (!presentaciones || presentaciones.length === 0) {
+      return []
+    }
 
-//     console.log('✅ getPresentacionesConProductos: Presentaciones con productos:', presentacionesUnicas.length)
-    return presentacionesUnicas
+    // Si se especifica zona, obtener productos con stock en esa zona
+    let productosConStock: number[] = []
+    if (zonaId) {
+      productosConStock = await getProductosConStockEnZona(zonaId)
+      console.log('🔍 Productos con stock en zona:', productosConStock.length)
+    }
+
+    // Obtener IDs únicos de presentaciones que tienen productos activos
+    const presentacionesConProductosIds = new Set<string>()
+
+    // 1. Productos con presentacion_id directo
+    let query1 = supabase
+      .from('productos')
+      .select('id, presentacion_id')
+      .eq('activo', true)
+      .gt('precio', 0)
+      .not('imagen', 'is', null)
+      .neq('imagen', '')
+      .not('presentacion_id', 'is', null)
+
+    // Si hay filtro de zona, solo incluir productos con stock
+    if (zonaId && productosConStock.length > 0) {
+      query1 = query1.in('id', productosConStock)
+    }
+
+    const { data: productosDirectos, error: error1 } = await query1
+
+    if (error1) {
+      console.error('❌ Error fetching productos directos:', error1)
+    } else {
+      console.log('🔍 Productos directos encontrados:', productosDirectos?.length || 0)
+      const presentacionesDirectas = new Set<string>()
+      productosDirectos?.forEach(p => {
+        if (p.presentacion_id) {
+          const pid = String(p.presentacion_id)
+          presentacionesConProductosIds.add(pid)
+          presentacionesDirectas.add(pid)
+        }
+      })
+      console.log('🔍 Presentaciones desde productos directos:', presentacionesDirectas.size)
+    }
+
+    // 2. Productos vinculados a través de tipos -> lineas -> presentaciones
+    let query2 = supabase
+      .from('productos')
+      .select('id, tipo_id')
+      .eq('activo', true)
+      .gt('precio', 0)
+      .not('imagen', 'is', null)
+      .neq('imagen', '')
+      .not('tipo_id', 'is', null)
+
+    // Si hay filtro de zona, solo incluir productos con stock
+    if (zonaId && productosConStock.length > 0) {
+      query2 = query2.in('id', productosConStock)
+    }
+
+    const { data: productosPorTipo, error: error2 } = await query2
+
+    if (error2) {
+      console.error('❌ Error fetching productos por tipo:', error2)
+    } else if (productosPorTipo && productosPorTipo.length > 0) {
+      const tipoIds = productosPorTipo.map(p => p.tipo_id).filter(id => id != null)
+
+      if (tipoIds.length > 0) {
+        const { data: tipos, error: error3 } = await supabase
+          .from('tipos')
+          .select('linea_id')
+          .in('id', tipoIds)
+          .not('linea_id', 'is', null)
+
+        if (error3) {
+          console.error('❌ Error fetching tipos:', error3)
+        } else if (tipos && tipos.length > 0) {
+          const lineaIds = tipos.map(t => t.linea_id).filter(id => id != null)
+
+          if (lineaIds.length > 0) {
+            const { data: lineas, error: error4 } = await supabase
+              .from('lineas')
+              .select('presentacion_id')
+              .in('id', lineaIds)
+              .not('presentacion_id', 'is', null)
+
+            if (error4) {
+              console.error('❌ Error fetching lineas:', error4)
+            } else {
+              console.log('🔍 Líneas encontradas:', lineas?.length || 0)
+              const presentacionesPorLinea = new Set<string>()
+              lineas?.forEach(l => {
+                if (l.presentacion_id) {
+                  const pid = String(l.presentacion_id)
+                  presentacionesConProductosIds.add(pid)
+                  presentacionesPorLinea.add(pid)
+                }
+              })
+              console.log('🔍 Presentaciones desde líneas:', presentacionesPorLinea.size)
+            }
+          }
+        }
+      }
+    }
+
+    // Filtrar solo las presentaciones que tienen productos
+    const presentacionesFiltradas = presentaciones.filter(p =>
+      presentacionesConProductosIds.has(String(p.id))
+    )
+
+    console.log('✅ getPresentacionesConProductos: Total presentaciones:', presentaciones.length)
+    console.log('✅ getPresentacionesConProductos: Presentaciones con productos:', presentacionesFiltradas.length)
+    console.log('✅ getPresentacionesConProductos: IDs con productos:', Array.from(presentacionesConProductosIds))
+    console.log('✅ getPresentacionesConProductos: Nombres filtrados:', presentacionesFiltradas.map(p => p.nombre))
+
+    return presentacionesFiltradas
 
   } catch (error) {
     console.error('❌ Error fetching presentaciones con productos:', error)
