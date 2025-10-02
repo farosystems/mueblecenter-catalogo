@@ -10,7 +10,7 @@ import GlobalZonaModal from "@/components/GlobalZonaModal"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Mueblecenter-catalogo",
+  title: "Mueblescenter-catalogo",
   description:
     "Tu tienda de electrodomésticos de confianza con los mejores planes de financiación. Heladeras, lavarropas, aires acondicionados y más.",
   keywords: "electrodomésticos, cuotas, financiación, heladeras, lavarropas, aires acondicionados",
