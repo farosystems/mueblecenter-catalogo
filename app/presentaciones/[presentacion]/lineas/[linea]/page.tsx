@@ -56,12 +56,12 @@ export default function LineaPage({ params }: LineaPageProps) {
           return slug === resolvedParams.presentacion
         })
 
-        // Encontrar la línea por slug
+        // Encontrar la línea por slug Y que pertenezca a la presentación
         const linea = lineasData.find(l => {
           const slug = l.nombre.toLowerCase()
             .replace(/[^a-z0-9]+/g, '-')
             .replace(/^-+|-+$/g, '')
-          return slug === resolvedParams.linea
+          return slug === resolvedParams.linea && l.presentacion_id === presentacion?.id
         })
 
         if (presentacion && linea) {
@@ -109,9 +109,9 @@ export default function LineaPage({ params }: LineaPageProps) {
       const slug = l.nombre.toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '')
-      return slug === resolvedParams.linea
+      return slug === resolvedParams.linea && l.presentacion_id === presentacion?.id
     })
-  }, [lineas, resolvedParams.linea])
+  }, [lineas, resolvedParams.linea, presentacion?.id])
 
   // Filtrar productos por búsqueda
   const filteredProducts = useMemo(() => {

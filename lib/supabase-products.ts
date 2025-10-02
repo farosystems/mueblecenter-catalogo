@@ -638,11 +638,40 @@ async function filtrarProductosPorZona(productos: Product[], zonaId: number | nu
   try {
     // Obtener IDs de productos con stock disponible en la zona
     const productosConStock = await getProductosConStockEnZona(zonaId)
-    
+
+    console.log('🔍 filtrarProductosPorZona: Productos antes de filtrar:', productos.length)
+    console.log('🔍 filtrarProductosPorZona: Productos con stock en zona:', productosConStock.length)
+    if (productos.length > 0) {
+      console.log('🔍 filtrarProductosPorZona: Ejemplo ID producto:', productos[0]?.id, 'tipo:', typeof productos[0]?.id)
+    }
+    if (productosConStock.length > 0) {
+      console.log('🔍 filtrarProductosPorZona: Ejemplo ID stock:', productosConStock[0], 'tipo:', typeof productosConStock[0])
+    }
+
     // Filtrar los productos que tienen stock en la zona
-    return productos.filter(producto => 
-      productosConStock.includes(parseInt(producto.id))
+    // Convertir ambos IDs a string para comparar correctamente
+    const productosConStockSet = new Set(productosConStock.map(id => String(id)))
+
+    // Verificar si hay coincidencias
+    const primerosProductosIds = productos.slice(0, 5).map(p => String(p.id))
+    const primerosStockIds = Array.from(productosConStockSet).slice(0, 5)
+    console.log('🔍 filtrarProductosPorZona: Primeros 5 IDs de productos:', primerosProductosIds)
+    console.log('🔍 filtrarProductosPorZona: Primeros 5 IDs de stock:', primerosStockIds)
+
+    const productosFiltrados = productos.filter(producto =>
+      productosConStockSet.has(String(producto.id))
     )
+
+    console.log('🔍 filtrarProductosPorZona: Productos después de filtrar:', productosFiltrados.length)
+
+    // Si no hay coincidencias, mostrar por qué
+    if (productosFiltrados.length === 0 && productos.length > 0) {
+      console.warn('⚠️ No hay coincidencias entre IDs de productos y stock')
+      console.log('Productos tienen IDs como:', primerosProductosIds)
+      console.log('Stock tiene IDs como:', primerosStockIds)
+    }
+
+    return productosFiltrados
   } catch (error) {
     console.error('Error al filtrar productos por zona:', error)
     return [] // En caso de error, devolver lista vacía para ser más restrictivo
@@ -858,14 +887,15 @@ export async function getTiposByLinea(lineaId: string): Promise<Tipo[]> {
 
 // Obtener productos por presentación, línea y tipo
 export async function getProductsByHierarchy(
-  presentacionId?: string, 
-  lineaId?: string, 
+  presentacionId?: string,
+  lineaId?: string,
   tipoId?: string,
   zonaId: number | null = null
 ): Promise<Product[]> {
   try {
-//     console.log('🔍 getProductsByHierarchy:', { presentacionId, lineaId, tipoId, zonaId })
-    
+    console.log('🔍 getProductsByHierarchy:', { presentacionId, lineaId, tipoId, zonaId })
+
+    // Construir query simple filtrando directamente por los campos del producto
     let query = supabase
       .from('productos')
       .select('*')
@@ -874,15 +904,32 @@ export async function getProductsByHierarchy(
       .not('imagen', 'is', null)
       .neq('imagen', '')
 
-    // Aplicar filtros según los parámetros
+    // Filtrar por presentación si se especifica
     if (presentacionId) {
       query = query.eq('presentacion_id', presentacionId)
     }
+
+    // Filtrar por línea si se especifica
     if (lineaId) {
       query = query.eq('linea_id', lineaId)
     }
+
+    // Filtrar por tipo si se especifica
     if (tipoId) {
       query = query.eq('tipo_id', tipoId)
+    }
+
+    // Si hay zona, filtrar por stock
+    if (zonaId) {
+      const productosConStock = await getProductosConStockEnZona(zonaId)
+      console.log('🔍 Productos con stock en zona:', productosConStock.length)
+
+      if (productosConStock.length > 0) {
+        query = query.in('id', productosConStock)
+      } else {
+        // No hay stock, retornar vacío
+        return []
+      }
     }
 
     const { data, error } = await query
@@ -946,8 +993,8 @@ export async function getProductsByHierarchy(
       }
     }) || []
 
-    // Filtrar por zona si es necesario
-    return filtrarProductosPorZona(transformedData, zonaId)
+    // NO filtrar por zona aquí porque ya se filtró en las queries
+    return transformedData
   } catch (error) {
     console.error('Error fetching products by hierarchy:', error)
     return []

@@ -233,26 +233,36 @@ export async function getProductosConStockEnZona(zonaId: number): Promise<number
   try {
     //console.log('🔍 getProductosConStockEnZona: Consultando zona:', zonaId)
 
-    // Obtener todos los registros de stock de la zona y filtrar en JavaScript
-    const { data, error } = await supabase
-      .from('stock_sucursales')
-      .select('fk_id_producto, stock, stock_minimo')
-      .eq('fk_id_zona', zonaId)
-      .eq('activo', true)
-      .gte('stock', 0) // Solo productos con stock no negativo
-      .range(0, 9999) // Obtener hasta 10,000 registros de stock
+    // Obtener TODOS los registros usando paginación
+    let allData: any[] = []
+    let from = 0
+    const pageSize = 1000
+    let hasMore = true
 
-    if (error) {
-      console.error('Error al obtener productos con stock en zona:', error)
-      return []
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('stock_sucursales')
+        .select('fk_id_producto, stock, stock_minimo')
+        .eq('fk_id_zona', zonaId)
+        .eq('activo', true)
+        .gt('stock', 0)
+        .range(from, from + pageSize - 1)
+
+      if (error) {
+        console.error('Error al obtener productos con stock en zona:', error)
+        break
+      }
+
+      if (data && data.length > 0) {
+        allData = allData.concat(data)
+        from += pageSize
+        hasMore = data.length === pageSize
+      } else {
+        hasMore = false
+      }
     }
 
-    //console.log('🔍 getProductosConStockEnZona: Registros encontrados:', data?.length || 0)
-
-    // Filtrar productos donde stock > 0 (sin considerar stock_minimo)
-    const productosConStock = data?.filter(item =>
-      item.stock > 0
-    ) || []
+    const productosConStock = allData
 
     console.log('🔍 getProductosConStockEnZona: Productos con stock > 0:', productosConStock.length)
 
@@ -265,7 +275,14 @@ export async function getProductosConStockEnZona(zonaId: number): Promise<number
       })))
     }
 
-    return productosConStock.map(item => item.fk_id_producto)
+    const productIds = productosConStock.map(item => item.fk_id_producto)
+
+    // DEBUG: Verificar si incluye IDs de electrodomésticos (7538, 7397, etc)
+    const electroIds = [7538, 7397, 7485, 7530, 20462]
+    const found = electroIds.filter(id => productIds.includes(id))
+    console.log('🔍 getProductosConStockEnZona: IDs electrodomésticos encontrados en stock:', found)
+
+    return productIds
   } catch (error) {
     console.error('Error al obtener productos con stock en zona:', error)
     return []

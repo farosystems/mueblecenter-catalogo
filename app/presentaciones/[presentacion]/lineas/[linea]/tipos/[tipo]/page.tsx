@@ -60,20 +60,20 @@ export default function TipoPage({ params }: TipoPageProps) {
           return slug === resolvedParams.presentacion
         })
 
-        // Encontrar la línea por slug
+        // Encontrar la línea por slug Y que pertenezca a la presentación
         const linea = lineasData.find(l => {
           const slug = l.nombre.toLowerCase()
             .replace(/[^a-z0-9]+/g, '-')
             .replace(/^-+|-+$/g, '')
-          return slug === resolvedParams.linea
+          return slug === resolvedParams.linea && l.presentacion_id === presentacion?.id
         })
 
-        // Encontrar el tipo por slug
+        // Encontrar el tipo por slug Y que pertenezca a la línea
         const tipo = tiposData.find(t => {
           const slug = t.nombre.toLowerCase()
             .replace(/[^a-z0-9]+/g, '-')
             .replace(/^-+|-+$/g, '')
-          return slug === resolvedParams.tipo
+          return slug === resolvedParams.tipo && t.linea_id === linea?.id
         })
 
         if (presentacion && linea && tipo) {
@@ -121,18 +121,18 @@ export default function TipoPage({ params }: TipoPageProps) {
       const slug = l.nombre.toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '')
-      return slug === resolvedParams.linea
+      return slug === resolvedParams.linea && l.presentacion_id === presentacion?.id
     })
-  }, [lineas, resolvedParams.linea])
+  }, [lineas, resolvedParams.linea, presentacion?.id])
 
   const tipo = useMemo(() => {
     return tipos.find(t => {
       const slug = t.nombre.toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '')
-      return slug === resolvedParams.tipo
+      return slug === resolvedParams.tipo && t.linea_id === linea?.id
     })
-  }, [tipos, resolvedParams.tipo])
+  }, [tipos, resolvedParams.tipo, linea?.id])
 
   // Filtrar productos por búsqueda
   const filteredProducts = useMemo(() => {
