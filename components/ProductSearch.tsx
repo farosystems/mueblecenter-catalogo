@@ -272,13 +272,22 @@ function ProductFinancingPrices({ product }: { product: Product }) {
     return null
   }
 
+  // Buscar el plan de 3 cuotas sin interés
+  const planTresCuotas = planes.find(p => p.cuotas === 3)
+  const calculoTresCuotas = planTresCuotas ? calcularCuota(product.precio || 0, planTresCuotas) : null
+
   return (
     <div>
+      <div className="text-xs text-gray-500">
+        Contado: ${formatearPrecio(product.precio || 0)}
+      </div>
+      {calculoTresCuotas && (
+        <div className="text-xs font-semibold text-green-600">
+          3 cuotas: ${formatearPrecio(calculoTresCuotas.cuota_mensual)}
+        </div>
+      )}
       <div className="text-sm font-bold text-blue-600">
         ${formatearPrecio(calculo.cuota_mensual)} × {primerPlan.cuotas}
-      </div>
-      <div className="text-sm font-bold text-green-600">
-        ${formatearPrecio(calculo.cuota_mensual_electro)} P.ELEC
       </div>
     </div>
   )

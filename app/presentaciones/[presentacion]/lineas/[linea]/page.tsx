@@ -9,14 +9,15 @@ import ProductCard from "@/components/ProductCard"
 import Pagination from "@/components/Pagination"
 import { useZonaContext } from "@/contexts/ZonaContext"
 import { ZonaGuard } from "@/components/ZonaGuard"
-import { Linea } from "@/lib/products"
-import { getAllLineas, getProductsByHierarchy } from "@/lib/supabase-products"
+import { Linea, Presentacion } from "@/lib/products"
+import { getAllLineas, getPresentaciones, getProductsByHierarchy } from "@/lib/supabase-products"
 import { Product } from "@/lib/products"
 
 const PRODUCTS_PER_PAGE = 6
 
 interface LineaPageProps {
   params: Promise<{
+    presentacion: string
     linea: string
   }>
 }
@@ -27,19 +28,33 @@ export default function LineaPage({ params }: LineaPageProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [animateProducts, setAnimateProducts] = useState(false)
   const [lineas, setLineas] = useState<Linea[]>([])
+  const [presentaciones, setPresentaciones] = useState<Presentacion[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const { zonaSeleccionada } = useZonaContext()
 
-  // Cargar líneas y productos
+  // Cargar líneas, presentaciones y productos
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true)
-        const lineasData = await getAllLineas()
+        const [lineasData, presentacionesData] = await Promise.all([
+          getAllLineas(),
+          getPresentaciones()
+        ])
+
         setLineas(lineasData)
+        setPresentaciones(presentacionesData)
+
+        // Encontrar la presentación por slug
+        const presentacion = presentacionesData.find(p => {
+          const slug = p.nombre.toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+          return slug === resolvedParams.presentacion
+        })
 
         // Encontrar la línea por slug
         const linea = lineasData.find(l => {
@@ -49,9 +64,9 @@ export default function LineaPage({ params }: LineaPageProps) {
           return slug === resolvedParams.linea
         })
 
-        if (linea) {
+        if (presentacion && linea) {
           const productsData = await getProductsByHierarchy(
-            undefined,
+            presentacion.id,
             linea.id,
             undefined,
             zonaSeleccionada?.id || null
@@ -67,19 +82,28 @@ export default function LineaPage({ params }: LineaPageProps) {
     }
 
     loadData()
-  }, [resolvedParams.linea, zonaSeleccionada?.id])
+  }, [resolvedParams.presentacion, resolvedParams.linea, zonaSeleccionada?.id])
 
   // Obtener parámetros de la URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const searchParam = urlParams.get('search')
-    
+
     if (searchParam) {
       setSearchTerm(searchParam)
     }
   }, [])
 
-  // Encontrar la línea por slug
+  // Encontrar la presentación y línea por slug
+  const presentacion = useMemo(() => {
+    return presentaciones.find(p => {
+      const slug = p.nombre.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+      return slug === resolvedParams.presentacion
+    })
+  }, [presentaciones, resolvedParams.presentacion])
+
   const linea = useMemo(() => {
     return lineas.find(l => {
       const slug = l.nombre.toLowerCase()
@@ -92,7 +116,7 @@ export default function LineaPage({ params }: LineaPageProps) {
   // Filtrar productos por búsqueda
   const filteredProducts = useMemo(() => {
     if (!products.length) return []
-    
+
     let filtered = products
 
     // Filtrar por búsqueda
@@ -172,15 +196,22 @@ export default function LineaPage({ params }: LineaPageProps) {
     )
   }
 
-  if (!linea) {
+  if (!presentacion || !linea) {
     return (
       <ZonaGuard>
         <div className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
           <GlobalAppBar />
           <div className="flex items-center justify-center py-20" style={{ marginTop: '140px' }}>
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Línea no encontrada</h2>
-              <p className="text-xl text-gray-600">La línea "{resolvedParams.linea}" no existe</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                {!presentacion ? 'Presentación no encontrada' : 'Línea no encontrada'}
+              </h2>
+              <p className="text-xl text-gray-600">
+                {!presentacion
+                  ? `La presentación "${resolvedParams.presentacion}" no existe`
+                  : `La línea "${resolvedParams.linea}" no existe`
+                }
+              </p>
             </div>
           </div>
           <Footer />
@@ -193,20 +224,18 @@ export default function LineaPage({ params }: LineaPageProps) {
     <ZonaGuard>
       <div className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
         <GlobalAppBar />
-      
+
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-16 py-4" style={{ marginTop: '20px' }}>
 
         {/* Header de la página */}
         <div className="mb-8">
           <div className="text-center">
+            <p className="text-green-600 font-medium mb-2">
+              {presentacion.nombre}
+            </p>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
               {linea.nombre}
             </h1>
-            {linea.presentacion && (
-              <p className="text-blue-600 font-medium mb-2">
-                {linea.presentacion.nombre}
-              </p>
-            )}
             {linea.descripcion && (
               <p className="text-gray-600 mb-2">
                 {linea.descripcion}
@@ -241,7 +270,7 @@ export default function LineaPage({ params }: LineaPageProps) {
                 No se encontraron productos
               </h3>
               <p className="text-gray-500 mb-6">
-                {searchTerm 
+                {searchTerm
                   ? `No hay productos que coincidan con "${searchTerm}" en ${linea.nombre}`
                   : `No hay productos disponibles en ${linea.nombre}`
                 }

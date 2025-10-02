@@ -9,14 +9,16 @@ import ProductCard from "@/components/ProductCard"
 import Pagination from "@/components/Pagination"
 import { useZonaContext } from "@/contexts/ZonaContext"
 import { ZonaGuard } from "@/components/ZonaGuard"
-import { Tipo } from "@/lib/products"
-import { getAllTipos, getProductsByHierarchy } from "@/lib/supabase-products"
+import { Tipo, Linea, Presentacion } from "@/lib/products"
+import { getAllTipos, getAllLineas, getPresentaciones, getProductsByHierarchy } from "@/lib/supabase-products"
 import { Product } from "@/lib/products"
 
 const PRODUCTS_PER_PAGE = 6
 
 interface TipoPageProps {
   params: Promise<{
+    presentacion: string
+    linea: string
     tipo: string
   }>
 }
@@ -27,19 +29,44 @@ export default function TipoPage({ params }: TipoPageProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [animateProducts, setAnimateProducts] = useState(false)
   const [tipos, setTipos] = useState<Tipo[]>([])
+  const [lineas, setLineas] = useState<Linea[]>([])
+  const [presentaciones, setPresentaciones] = useState<Presentacion[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const { zonaSeleccionada } = useZonaContext()
 
-  // Cargar tipos y productos
+  // Cargar tipos, líneas, presentaciones y productos
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true)
-        const tiposData = await getAllTipos()
+        const [tiposData, lineasData, presentacionesData] = await Promise.all([
+          getAllTipos(),
+          getAllLineas(),
+          getPresentaciones()
+        ])
+
         setTipos(tiposData)
+        setLineas(lineasData)
+        setPresentaciones(presentacionesData)
+
+        // Encontrar la presentación por slug
+        const presentacion = presentacionesData.find(p => {
+          const slug = p.nombre.toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+          return slug === resolvedParams.presentacion
+        })
+
+        // Encontrar la línea por slug
+        const linea = lineasData.find(l => {
+          const slug = l.nombre.toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+          return slug === resolvedParams.linea
+        })
 
         // Encontrar el tipo por slug
         const tipo = tiposData.find(t => {
@@ -49,10 +76,10 @@ export default function TipoPage({ params }: TipoPageProps) {
           return slug === resolvedParams.tipo
         })
 
-        if (tipo) {
+        if (presentacion && linea && tipo) {
           const productsData = await getProductsByHierarchy(
-            undefined,
-            undefined,
+            presentacion.id,
+            linea.id,
             tipo.id,
             zonaSeleccionada?.id || null
           )
@@ -67,19 +94,37 @@ export default function TipoPage({ params }: TipoPageProps) {
     }
 
     loadData()
-  }, [resolvedParams.tipo, zonaSeleccionada?.id])
+  }, [resolvedParams.presentacion, resolvedParams.linea, resolvedParams.tipo, zonaSeleccionada?.id])
 
   // Obtener parámetros de la URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const searchParam = urlParams.get('search')
-    
+
     if (searchParam) {
       setSearchTerm(searchParam)
     }
   }, [])
 
-  // Encontrar el tipo por slug
+  // Encontrar la presentación, línea y tipo por slug
+  const presentacion = useMemo(() => {
+    return presentaciones.find(p => {
+      const slug = p.nombre.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+      return slug === resolvedParams.presentacion
+    })
+  }, [presentaciones, resolvedParams.presentacion])
+
+  const linea = useMemo(() => {
+    return lineas.find(l => {
+      const slug = l.nombre.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+      return slug === resolvedParams.linea
+    })
+  }, [lineas, resolvedParams.linea])
+
   const tipo = useMemo(() => {
     return tipos.find(t => {
       const slug = t.nombre.toLowerCase()
@@ -92,7 +137,7 @@ export default function TipoPage({ params }: TipoPageProps) {
   // Filtrar productos por búsqueda
   const filteredProducts = useMemo(() => {
     if (!products.length) return []
-    
+
     let filtered = products
 
     // Filtrar por búsqueda
@@ -172,15 +217,24 @@ export default function TipoPage({ params }: TipoPageProps) {
     )
   }
 
-  if (!tipo) {
+  if (!presentacion || !linea || !tipo) {
     return (
       <ZonaGuard>
         <div className="bg-gradient-to-br from-gray-50 to-purple-50 min-h-screen">
           <GlobalAppBar />
           <div className="flex items-center justify-center py-20" style={{ marginTop: '140px' }}>
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Tipo no encontrado</h2>
-              <p className="text-xl text-gray-600">El tipo "{resolvedParams.tipo}" no existe</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                {!presentacion ? 'Presentación no encontrada' : !linea ? 'Línea no encontrada' : 'Tipo no encontrado'}
+              </h2>
+              <p className="text-xl text-gray-600">
+                {!presentacion
+                  ? `La presentación "${resolvedParams.presentacion}" no existe`
+                  : !linea
+                  ? `La línea "${resolvedParams.linea}" no existe`
+                  : `El tipo "${resolvedParams.tipo}" no existe`
+                }
+              </p>
             </div>
           </div>
           <Footer />
@@ -193,27 +247,21 @@ export default function TipoPage({ params }: TipoPageProps) {
     <ZonaGuard>
       <div className="bg-gradient-to-br from-gray-50 to-purple-50 min-h-screen">
         <GlobalAppBar />
-      
+
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-16 py-4" style={{ marginTop: '20px' }}>
 
         {/* Header de la página */}
         <div className="mb-8">
           <div className="text-center">
+            <p className="text-green-600 font-medium text-sm">
+              {presentacion.nombre}
+            </p>
+            <p className="text-blue-600 font-medium mb-2">
+              {linea.nombre}
+            </p>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
               {tipo.nombre}
             </h1>
-            {tipo.linea && (
-              <div className="mb-2">
-                <p className="text-purple-600 font-medium">
-                  {tipo.linea.nombre}
-                </p>
-                {tipo.linea.presentacion && (
-                  <p className="text-purple-500 text-sm">
-                    {tipo.linea.presentacion.nombre}
-                  </p>
-                )}
-              </div>
-            )}
             {tipo.descripcion && (
               <p className="text-gray-600 mb-2">
                 {tipo.descripcion}
@@ -248,7 +296,7 @@ export default function TipoPage({ params }: TipoPageProps) {
                 No se encontraron productos
               </h3>
               <p className="text-gray-500 mb-6">
-                {searchTerm 
+                {searchTerm
                   ? `No hay productos que coincidan con "${searchTerm}" en ${tipo.nombre}`
                   : `No hay productos disponibles en ${tipo.nombre}`
                 }

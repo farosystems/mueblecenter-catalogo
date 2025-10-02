@@ -262,7 +262,7 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
                               {/* Link directo a línea */}
                               <div className="px-3 pl-8 pb-2">
                                 <Link
-                                  href={`/lineas/${createSlug(linea.nombre)}`}
+                                  href={`/presentaciones/${createSlug(presentacion.nombre)}/lineas/${createSlug(linea.nombre)}`}
                                   onClick={onClose}
                                   className="text-xs text-blue-600 hover:text-blue-800 underline"
                                 >
@@ -277,7 +277,7 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
                                 {tipos[linea.id]?.map((tipo) => (
                                   <Link
                                     key={tipo.id}
-                                    href={`/tipos/${createSlug(tipo.nombre)}`}
+                                    href={`/presentaciones/${createSlug(presentacion.nombre)}/lineas/${createSlug(linea.nombre)}/tipos/${createSlug(tipo.nombre)}`}
                                     onClick={onClose}
                                     className="flex items-center justify-between p-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0"
                                   >
@@ -533,7 +533,7 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
                       >
                         <div className="flex items-center justify-between px-2 py-2 hover:bg-blue-50 rounded transition-colors">
                           <Link
-                            href={`/lineas/${createSlug(linea.nombre)}`}
+                            href={`/presentaciones/${createSlug(presentacion.nombre)}/lineas/${createSlug(linea.nombre)}`}
                             onClick={onClose}
                             className="text-blue-700 text-sm font-medium flex-1"
                           >
@@ -566,7 +566,7 @@ export default function PresentacionesDropdown({ isOpen, onClose, isMobile = fal
                             {tipos[linea.id]?.map((tipo) => (
                               <Link
                                 key={tipo.id}
-                                href={`/tipos/${createSlug(tipo.nombre)}`}
+                                href={`/presentaciones/${createSlug(presentacion.nombre)}/lineas/${createSlug(linea.nombre)}/tipos/${createSlug(tipo.nombre)}`}
                                 onClick={onClose}
                                 className="block px-2 py-2 text-sm text-purple-700 font-medium hover:bg-purple-50 rounded transition-colors"
                               >
