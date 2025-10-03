@@ -771,10 +771,64 @@ export async function searchProductsByZona(searchTerm: string, zonaId: number | 
   }
 }
 
-// Versión modificada de getFeaturedProducts que filtra por zona
+// Obtener productos destacados por zona usando SOLO la tabla productos_destacados_zona
+// Filtra solo productos con stock disponible en la zona
 export async function getFeaturedProductsByZona(zonaId: number | null = null): Promise<Product[]> {
-  const productos = await getFeaturedProducts()
-  return filtrarProductosPorZona(productos, zonaId)
+  try {
+    if (!zonaId) {
+      // Sin zona, retornar array vacío (no usar campo destacado)
+      console.log('🔍 getFeaturedProductsByZona: No hay zona seleccionada, retornando vacío')
+      return []
+    }
+
+    console.log('🔍 getFeaturedProductsByZona: Obteniendo destacados para zona:', zonaId)
+
+    // Obtener productos destacados específicos de la zona con JOIN a stock_sucursales
+    const { data, error } = await supabase
+      .from('productos_destacados_zona')
+      .select(`
+        fk_id_producto,
+        orden,
+        productos!inner (
+          *,
+          categoria:categorias(id, descripcion, created_at),
+          marca:marcas(id, descripcion, created_at, logo),
+          stock_sucursales!inner(stock, stock_minimo)
+        )
+      `)
+      .eq('fk_id_zona', zonaId)
+      .eq('activo', true)
+      .eq('productos.stock_sucursales.fk_id_zona', zonaId)
+      .eq('productos.stock_sucursales.activo', true)
+      .gt('productos.stock_sucursales.stock', 0)
+      .order('orden', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching featured products by zona:', error)
+      return []
+    }
+
+    console.log('🔍 getFeaturedProductsByZona: Productos destacados encontrados:', data?.length || 0)
+
+    // Transformar los datos para extraer el producto del objeto anidado
+    const productos = data?.map(item => {
+      const producto = item.productos
+      return {
+        ...producto,
+        fk_id_categoria: producto.fk_id_categoria || 1,
+        fk_id_marca: producto.fk_id_marca || 1,
+        categoria: producto.categoria || { id: producto.fk_id_categoria || 1, descripcion: `Categoría ${producto.fk_id_categoria || 1}` },
+        marca: producto.marca || { id: producto.fk_id_marca || 1, descripcion: `Marca ${producto.fk_id_marca || 1}` }
+      }
+    }).filter(p => p && p.precio > 0 && p.activo) || []
+
+    console.log('🔍 getFeaturedProductsByZona: Productos con stock transformados:', productos.length)
+
+    return productos
+  } catch (error) {
+    console.error('Error in getFeaturedProductsByZona:', error)
+    return []
+  }
 }
 
 // Versión modificada de getProductsByCategory que filtra por zona
