@@ -949,7 +949,60 @@ export async function getProductsByHierarchy(
   try {
     console.log('🔍 getProductsByHierarchy:', { presentacionId, lineaId, tipoId, zonaId })
 
-    // Construir query simple filtrando directamente por los campos del producto
+    // Si se especifica tipo, usar ese tipo directamente
+    let tiposIds: string[] = []
+
+    if (tipoId) {
+      tiposIds = [tipoId]
+    } else if (lineaId) {
+      // Si se especifica línea pero no tipo, obtener todos los tipos de esa línea
+      const { data: tipos, error: tiposError } = await supabase
+        .from('tipos')
+        .select('id')
+        .eq('linea_id', lineaId)
+        .eq('activo', true)
+
+      if (tiposError) {
+        console.error('Error fetching tipos by linea:', tiposError)
+        return []
+      }
+
+      tiposIds = tipos?.map(t => String(t.id)) || []
+      console.log('🔍 Tipos encontrados para línea:', tiposIds.length)
+    } else if (presentacionId) {
+      // Si se especifica presentación pero no línea ni tipo, obtener todos los tipos de esa presentación
+      const { data: lineas, error: lineasError } = await supabase
+        .from('lineas')
+        .select('id')
+        .eq('presentacion_id', presentacionId)
+        .eq('activo', true)
+
+      if (lineasError) {
+        console.error('Error fetching lineas by presentacion:', lineasError)
+        return []
+      }
+
+      const lineasIds = lineas?.map(l => l.id) || []
+      console.log('🔍 Líneas encontradas para presentación:', lineasIds.length)
+
+      if (lineasIds.length > 0) {
+        const { data: tipos, error: tiposError } = await supabase
+          .from('tipos')
+          .select('id')
+          .in('linea_id', lineasIds)
+          .eq('activo', true)
+
+        if (tiposError) {
+          console.error('Error fetching tipos by lineas:', tiposError)
+          return []
+        }
+
+        tiposIds = tipos?.map(t => String(t.id)) || []
+        console.log('🔍 Tipos encontrados para presentación:', tiposIds.length)
+      }
+    }
+
+    // Construir query de productos
     let query = supabase
       .from('productos')
       .select('*')
@@ -958,19 +1011,9 @@ export async function getProductsByHierarchy(
       .not('imagen', 'is', null)
       .neq('imagen', '')
 
-    // Filtrar por presentación si se especifica
-    if (presentacionId) {
-      query = query.eq('presentacion_id', presentacionId)
-    }
-
-    // Filtrar por línea si se especifica
-    if (lineaId) {
-      query = query.eq('linea_id', lineaId)
-    }
-
-    // Filtrar por tipo si se especifica
-    if (tipoId) {
-      query = query.eq('tipo_id', tipoId)
+    // Filtrar por tipos si se encontraron
+    if (tiposIds.length > 0) {
+      query = query.in('tipo_id', tiposIds)
     }
 
     // Si hay zona, filtrar por stock
