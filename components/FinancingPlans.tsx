@@ -9,10 +9,12 @@ interface FinancingPlansProps {
   precio: number
   showDebug?: boolean
   simplified?: boolean
+  onPrecioPromoChange?: (precioPromo: number | null) => void
 }
 
-export default function FinancingPlans({ productoId, precio, showDebug = false, simplified = false }: FinancingPlansProps) {
+export default function FinancingPlans({ productoId, precio, showDebug = false, simplified = false, onPrecioPromoChange }: FinancingPlansProps) {
   const [planes, setPlanes] = useState<PlanFinanciacion[]>([])
+  const [precioPromo, setPrecioPromo] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [tipoPlanes, setTipoPlanes] = useState<'especiales' | 'default' | 'todos' | 'ninguno'>('ninguno')
 
@@ -20,15 +22,21 @@ export default function FinancingPlans({ productoId, precio, showDebug = false, 
     async function loadPlanes() {
       try {
         setLoading(true)
-        const [planesData, tipoData] = await Promise.all([
+        const [planesResult, tipoData] = await Promise.all([
           getPlanesProducto(productoId),
           getTipoPlanesProducto(productoId)
         ])
-        //console.log('Planes cargados para producto', productoId, ':', planesData)
+        //console.log('Planes cargados para producto', productoId, ':', planesResult)
         //console.log('Tipo de planes para producto', productoId, ':', tipoData)
-        
-        setPlanes(planesData)
+
+        setPlanes(planesResult.planes)
+        setPrecioPromo(planesResult.precio_promo)
         setTipoPlanes(tipoData)
+
+        // Notificar al padre si hay callback
+        if (onPrecioPromoChange) {
+          onPrecioPromoChange(planesResult.precio_promo)
+        }
       } catch (error) {
         console.error('Error loading financing plans:', error)
       } finally {
@@ -37,7 +45,7 @@ export default function FinancingPlans({ productoId, precio, showDebug = false, 
     }
 
     loadPlanes()
-  }, [productoId])
+  }, [productoId, onPrecioPromoChange])
 
   if (loading) {
     return (
@@ -75,18 +83,22 @@ export default function FinancingPlans({ productoId, precio, showDebug = false, 
     return a.cuotas - b.cuotas
   })
 
+  // Usar precio_promo si existe, sino usar el precio normal
+  const precioParaCalcular = precioPromo || precio
+
   return (
     <div className="mt-3 space-y-2">
       {/* Información de debug */}
       {showDebug && (
         <div className="text-xs text-gray-500 mb-2 p-2 bg-gray-100 rounded">
           <strong>Tipo de planes:</strong> {getTipoPlanesText(tipoPlanes)} | <strong>Total:</strong> {planes.length} planes
+          {precioPromo && <> | <strong>Precio Promo:</strong> ${formatearPrecio(precioPromo)}</>}
         </div>
       )}
-      
+
       {planesOrdenados.map((plan, index) => {
-        const calculo = calcularCuota(precio, plan)
-        const anticipo = calcularAnticipo(precio, plan)
+        const calculo = calcularCuota(precioParaCalcular, plan)
+        const anticipo = calcularAnticipo(precioParaCalcular, plan)
         if (!calculo) return null
 
         return (

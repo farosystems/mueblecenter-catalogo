@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { Product } from "@/lib/products"
 import FinancingPlans from "./FinancingPlans"
@@ -14,6 +15,10 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
   const productCategory = product.categoria?.descripcion || product.category || 'Sin categoría'
   const productBrand = product.marca?.descripcion || product.brand || 'Sin marca'
   const productPrice = product.precio || product.price || 0
+  const [precioPromo, setPrecioPromo] = useState<number | null>(null)
+
+  // Usar precio_promo si existe, sino usar el precio normal
+  const precioAMostrar = precioPromo || productPrice
 
 
   if (variant === 'compact') {
@@ -44,15 +49,20 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
             </h3>
 
             {/* Precio del producto */}
-            {productPrice > 0 && (
+            {precioAMostrar > 0 && (
               <p className="text-xl font-bold text-green-600 mb-1">
-                ${productPrice.toLocaleString('es-AR')}
+                ${precioAMostrar.toLocaleString('es-AR')}
               </p>
             )}
 
             {/* Planes de Financiación - Versión simplificada */}
             <div className="mb-1">
-              <FinancingPlans productoId={product.id} precio={productPrice} simplified={true} />
+              <FinancingPlans
+                productoId={product.id}
+                precio={productPrice}
+                simplified={true}
+                onPrecioPromoChange={setPrecioPromo}
+              />
             </div>
 
             {/* Botones de acción compactos */}
@@ -122,14 +132,19 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
           </h3>
 
           {/* Precio del producto */}
-          {productPrice > 0 && (
+          {precioAMostrar > 0 && (
             <p className="text-2xl sm:text-3xl font-bold text-green-600 mb-3">
-              ${productPrice.toLocaleString('es-AR')}
+              ${precioAMostrar.toLocaleString('es-AR')}
             </p>
           )}
 
           {/* Planes de Financiación - Versión simplificada */}
-          <FinancingPlans productoId={product.id} precio={productPrice} simplified={true} />
+          <FinancingPlans
+            productoId={product.id}
+            precio={productPrice}
+            simplified={true}
+            onPrecioPromoChange={setPrecioPromo}
+          />
 
           {/* Botones de acción */}
           <div className="mt-3 space-y-2">

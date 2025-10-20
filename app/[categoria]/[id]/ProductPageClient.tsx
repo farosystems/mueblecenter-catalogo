@@ -27,11 +27,11 @@ interface ProductPageClientProps {
   hierarchyType?: 'categoria' | 'presentacion' | 'linea' | 'tipo'
 }
 
-export default function ProductPageClient({ 
-  params, 
-  productId, 
-  categorySlug, 
-  hierarchyType = 'categoria' 
+export default function ProductPageClient({
+  params,
+  productId,
+  categorySlug,
+  hierarchyType = 'categoria'
 }: ProductPageClientProps) {
   const resolvedParams = params ? use(params) : { categoria: categorySlug!, id: productId! }
   const router = useRouter()
@@ -39,6 +39,7 @@ export default function ProductPageClient({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentMobileIndex, setCurrentMobileIndex] = useState(0)
+  const [precioPromo, setPrecioPromo] = useState<number | null>(null)
   const mobileScrollRef = useRef<HTMLDivElement>(null)
 
   const { products, categories } = useProducts()
@@ -301,13 +302,13 @@ export default function ProductPageClient({
             </h1>
 
             {/* Precio Principal */}
-            {(product.precio || 0) > 0 && (
+            {(precioPromo || product.precio || 0) > 0 && (
               <div className="mb-6">
                 <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg">
                   <div className="text-center">
                     <p className="text-sm font-medium opacity-90 mb-1">Precio de Lista</p>
                     <p className="text-4xl font-bold">
-                      ${(product.precio || 0).toLocaleString('es-AR')}
+                      ${(precioPromo || product.precio || 0).toLocaleString('es-AR')}
                     </p>
                   </div>
                 </div>
@@ -316,9 +317,10 @@ export default function ProductPageClient({
 
             {/* Precios */}
             <div className="mb-8">
-              <FinancingPlansLarge 
+              <FinancingPlansLarge
                 productoId={product.id.toString()}
                 precio={product.precio || 0}
+                onPrecioPromoChange={setPrecioPromo}
               />
             </div>
 

@@ -106,36 +106,40 @@ export async function getPlanesFinanciacion(): Promise<PlanFinanciacion[]> {
 }
 
 // Obtener planes disponibles para un producto específico con lógica simplificada
-export async function getPlanesProducto(productoId: string): Promise<PlanFinanciacion[]> {
+// Retorna un objeto con planes y precio_promo si existe
+export async function getPlanesProducto(productoId: string): Promise<{ planes: PlanFinanciacion[], precio_promo: number | null }> {
   try {
     //console.log('🔍 getPlanesProducto: Buscando planes para producto ID:', productoId)
-    
+
     // 1. PRIORIDAD ALTA: Buscar planes especiales (productos_planes)
     try {
       const { data: planesEspeciales, error: errorEspeciales } = await supabase
         .from('producto_planes')
-        .select('fk_id_plan')
+        .select('fk_id_plan, precio_promo')
         .eq('fk_id_producto', parseInt(productoId))
         .eq('activo', true)
 
       //console.log('🔍 getPlanesProducto: Planes especiales encontrados:', planesEspeciales?.length || 0)
       //console.log('🔍 getPlanesProducto: Error en consulta planes especiales:', errorEspeciales)
-      
+
       if (planesEspeciales && planesEspeciales.length > 0) {
         // Obtener los planes de financiación por separado
         const planIds = planesEspeciales.map(p => p.fk_id_plan)
+        // Obtener precio_promo (asumiendo que todos tienen el mismo precio_promo)
+        const precio_promo = planesEspeciales[0]?.precio_promo || null
         //console.log('🔍 getPlanesProducto: IDs de planes especiales encontrados:', planIds)
-        
+        //console.log('🔍 getPlanesProducto: Precio promo:', precio_promo)
+
         const { data: planesData, error: planesError } = await supabase
           .from('planes_financiacion')
           .select('*')
           .in('id', planIds)
           .eq('activo', true)
-        
+
         if (planesData && planesData.length > 0) {
           //console.log('🔍 getPlanesProducto: Detalle planes especiales:', planesData.map(p => p.cuotas))
           //console.log('✅ getPlanesProducto: Usando planes especiales:', planesData.length, planesData.map(p => p.cuotas))
-          return planesData
+          return { planes: planesData, precio_promo }
         }
       }
     } catch (error) {
@@ -144,7 +148,7 @@ export async function getPlanesProducto(productoId: string): Promise<PlanFinanci
 
     // 2. PRIORIDAD BAJA: Si no hay planes especiales, usar planes por defecto
     //console.log('🔍 getPlanesProducto: No hay planes especiales, buscando planes por defecto...')
-    
+
     try {
       const { data: planesDefault, error: errorDefault } = await supabase
         .from('producto_planes_default')
@@ -154,22 +158,22 @@ export async function getPlanesProducto(productoId: string): Promise<PlanFinanci
 
       //console.log('🔍 getPlanesProducto: Planes por defecto encontrados:', planesDefault?.length || 0)
       //console.log('🔍 getPlanesProducto: Error en consulta planes por defecto:', errorDefault)
-      
+
       if (planesDefault && planesDefault.length > 0) {
         // Obtener los planes de financiación por separado
         const planIds = planesDefault.map(p => p.fk_id_plan)
         //console.log('🔍 getPlanesProducto: IDs de planes encontrados:', planIds)
-        
+
         const { data: planesData, error: planesError } = await supabase
           .from('planes_financiacion')
           .select('*')
           .in('id', planIds)
           .eq('activo', true)
-        
+
         if (planesData && planesData.length > 0) {
           //console.log('🔍 getPlanesProducto: Detalle planes por defecto:', planesData.map(p => p.cuotas))
           //console.log('✅ getPlanesProducto: Usando planes por defecto:', planesData.length, planesData.map(p => p.cuotas))
-          return planesData
+          return { planes: planesData, precio_promo: null }
         }
       }
     } catch (error) {
@@ -179,10 +183,10 @@ export async function getPlanesProducto(productoId: string): Promise<PlanFinanci
     // 3. FALLBACK: Si no hay planes especiales ni por defecto, no mostrar ningún plan
     //console.log('🔍 getPlanesProducto: No hay planes específicos ni por defecto para este producto')
     //console.log('✅ getPlanesProducto: No se mostrarán planes de financiación')
-    return []
+    return { planes: [], precio_promo: null }
   } catch (error) {
     console.error('❌ getPlanesProducto: Error general:', error)
-    return []
+    return { planes: [], precio_promo: null }
   }
 }
 

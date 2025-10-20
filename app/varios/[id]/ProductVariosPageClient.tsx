@@ -28,6 +28,7 @@ export default function ProductVariosPageClient({ params }: ProductVariosPageCli
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentMobileIndex, setCurrentMobileIndex] = useState(0)
+  const [precioPromo, setPrecioPromo] = useState<number | null>(null)
   const mobileScrollRef = useRef<HTMLDivElement>(null)
 
   const { products } = useProducts()
@@ -238,13 +239,13 @@ export default function ProductVariosPageClient({ params }: ProductVariosPageCli
             </h1>
 
             {/* Precio Principal */}
-            {(product.precio || 0) > 0 && (
+            {(precioPromo || product.precio || 0) > 0 && (
               <div className="mb-6">
                 <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg">
                   <div className="text-center">
                     <p className="text-sm font-medium opacity-90 mb-1">Precio de Lista</p>
                     <p className="text-4xl font-bold">
-                      ${(product.precio || 0).toLocaleString('es-AR')}
+                      ${(precioPromo || product.precio || 0).toLocaleString('es-AR')}
                     </p>
                   </div>
                 </div>
@@ -253,9 +254,10 @@ export default function ProductVariosPageClient({ params }: ProductVariosPageCli
 
             {/* Precios */}
             <div className="mb-8">
-              <FinancingPlansLarge 
+              <FinancingPlansLarge
                 productoId={product.id.toString()}
                 precio={product.precio || 0}
+                onPrecioPromoChange={setPrecioPromo}
               />
             </div>
 

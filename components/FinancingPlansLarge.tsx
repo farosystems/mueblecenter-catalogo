@@ -8,10 +8,12 @@ interface FinancingPlansLargeProps {
   productoId: string
   precio: number
   showDebug?: boolean
+  onPrecioPromoChange?: (precioPromo: number | null) => void
 }
 
-export default function FinancingPlansLarge({ productoId, precio, showDebug = false }: FinancingPlansLargeProps) {
+export default function FinancingPlansLarge({ productoId, precio, showDebug = false, onPrecioPromoChange }: FinancingPlansLargeProps) {
   const [planes, setPlanes] = useState<PlanFinanciacion[]>([])
+  const [precioPromo, setPrecioPromo] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [tipoPlanes, setTipoPlanes] = useState<'especiales' | 'default' | 'todos' | 'ninguno'>('ninguno')
 
@@ -19,15 +21,21 @@ export default function FinancingPlansLarge({ productoId, precio, showDebug = fa
     async function loadPlanes() {
       try {
         setLoading(true)
-        const [planesData, tipoData] = await Promise.all([
+        const [planesResult, tipoData] = await Promise.all([
           getPlanesProducto(productoId),
           getTipoPlanesProducto(productoId)
         ])
-        //console.log('Planes cargados para producto', productoId, ':', planesData)
+        //console.log('Planes cargados para producto', productoId, ':', planesResult)
         //console.log('Tipo de planes para producto', productoId, ':', tipoData)
-        
-        setPlanes(planesData)
+
+        setPlanes(planesResult.planes)
+        setPrecioPromo(planesResult.precio_promo)
         setTipoPlanes(tipoData)
+
+        // Notificar al padre si hay callback
+        if (onPrecioPromoChange) {
+          onPrecioPromoChange(planesResult.precio_promo)
+        }
       } catch (error) {
         console.error('Error loading financing plans:', error)
       } finally {
@@ -36,7 +44,7 @@ export default function FinancingPlansLarge({ productoId, precio, showDebug = fa
     }
 
     loadPlanes()
-  }, [productoId])
+  }, [productoId, onPrecioPromoChange])
 
   if (loading) {
     return (
@@ -81,6 +89,9 @@ export default function FinancingPlansLarge({ productoId, precio, showDebug = fa
     return a.cuotas - b.cuotas
   })
 
+  // Usar precio_promo si existe, sino usar el precio normal
+  const precioParaCalcular = precioPromo || precio
+
   return (
     <div className="bg-white rounded-lg p-4 shadow-sm">
       <h3 className="text-lg font-bold text-gray-900 mb-3">Planes de Financiación</h3>
@@ -95,18 +106,19 @@ export default function FinancingPlansLarge({ productoId, precio, showDebug = fa
           <img src="/tarjetas_logos/Cabal_logo-removebg-preview.png" alt="Cabal" className="h-16 w-auto" />
         </div>
       </div>
-      
+
       {/* Información de debug */}
       {showDebug && (
         <div className="text-xs text-gray-500 mb-2 p-2 bg-gray-100 rounded">
           <strong>Tipo de planes:</strong> {getTipoPlanesText(tipoPlanes)} | <strong>Total:</strong> {planes.length} planes
+          {precioPromo && <> | <strong>Precio Promo:</strong> ${formatearPrecio(precioPromo)}</>}
         </div>
       )}
-      
+
       <div className="space-y-2">
         {planesOrdenados.map((plan, index) => {
-          const calculo = calcularCuota(precio, plan)
-          const anticipo = calcularAnticipo(precio, plan)
+          const calculo = calcularCuota(precioParaCalcular, plan)
+          const anticipo = calcularAnticipo(precioParaCalcular, plan)
           if (!calculo) return null
 
           return (
