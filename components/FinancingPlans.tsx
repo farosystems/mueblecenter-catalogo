@@ -101,6 +101,10 @@ export default function FinancingPlans({ productoId, precio, showDebug = false, 
         const anticipo = calcularAnticipo(precioParaCalcular, plan)
         if (!calculo) return null
 
+        // Determinar si el plan tiene recargos
+        const tieneRecargos = plan.recargo_porcentual > 0 || plan.recargo_fijo > 0
+        const textoTipoCuota = tieneRecargos ? 'cuotas fijas' : 'cuotas sin interés'
+
         return (
           <div
             key={plan.id}
@@ -113,10 +117,10 @@ export default function FinancingPlans({ productoId, precio, showDebug = false, 
               {simplified ?
                 plan.cuotas === 3 ?
                   `${plan.cuotas} cuotas sin interés de $${formatearCuota(calculo.cuota_mensual)}` :
-                  `${plan.cuotas} cuotas fijas de $${formatearCuota(calculo.cuota_mensual)}` :
+                  `${plan.cuotas} ${textoTipoCuota} de $${formatearCuota(calculo.cuota_mensual)}` :
                 plan.cuotas === 3 ?
                   `${plan.cuotas} cuotas sin interés de $${formatearCuota(calculo.cuota_mensual)}` :
-                  `${plan.cuotas} cuotas fijas de $${formatearCuota(calculo.cuota_mensual)}`
+                  `${plan.cuotas} ${textoTipoCuota} de $${formatearCuota(calculo.cuota_mensual)}`
               }
             </div>
             {anticipo > 0 && (
