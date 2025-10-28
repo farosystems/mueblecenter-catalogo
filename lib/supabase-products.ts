@@ -951,7 +951,7 @@ export async function getProductsByHierarchy(
   zonaId: number | null = null
 ): Promise<Product[]> {
   try {
-    console.log('🔍 getProductsByHierarchy:', { presentacionId, lineaId, tipoId, zonaId })
+    console.log('🔍 getProductsByHierarchy - INICIO:', { presentacionId, lineaId, tipoId, zonaId })
 
     // Si se especifica tipo, usar ese tipo directamente
     let tiposIds: string[] = []
@@ -1006,18 +1006,82 @@ export async function getProductsByHierarchy(
       }
     }
 
-    // Construir query de productos
-    let query = supabase
-      .from('productos')
-      .select('*')
-      .gt('precio', 0)
-      .eq('activo', true)
-      .not('imagen', 'is', null)
-      .neq('imagen', '')
+    // Obtener IDs de productos que cumplen los criterios
+    let productIds: string[] = []
 
-    // Filtrar por tipos si se encontraron
-    if (tiposIds.length > 0) {
-      query = query.in('tipo_id', tiposIds)
+    // ESTRATEGIA CORREGIDA:
+    // 1. Si hay tipos de esta presentación, buscar productos con esos tipos Y que NO tengan presentacion_id de otra presentación
+    // 2. También buscar productos con presentacion_id directo de esta presentación
+
+    // Caso 1: Si hay tipos, buscar por tipos pero SOLO si no tienen presentacion_id o si coincide con la presentación buscada
+    if (tiposIds.length > 0 && presentacionId) {
+      // Buscar productos con tipo_id correcto Y (sin presentacion_id O con presentacion_id correcto)
+      const { data: productosPorTipo, error: errorTipo } = await supabase
+        .from('productos')
+        .select('id, presentacion_id')
+        .gt('precio', 0)
+        .eq('activo', true)
+        .not('imagen', 'is', null)
+        .neq('imagen', '')
+        .in('tipo_id', tiposIds)
+
+      if (errorTipo) {
+        console.error('Error fetching products by tipo:', errorTipo)
+      } else {
+        // Filtrar solo productos que no tengan presentacion_id O que coincida con la presentación buscada
+        const productosFiltrados = productosPorTipo?.filter(p =>
+          !p.presentacion_id || p.presentacion_id === presentacionId
+        ) || []
+
+        productIds = [...productIds, ...productosFiltrados.map(p => String(p.id))]
+        console.log('🔍 Productos por tipos (total):', productosPorTipo?.length || 0)
+        console.log('🔍 Productos por tipos (filtrados por presentacion):', productosFiltrados.length)
+      }
+    } else if (tiposIds.length > 0) {
+      // Si no hay presentacionId, buscar por tipos sin filtro adicional
+      const { data: productosPorTipo, error: errorTipo } = await supabase
+        .from('productos')
+        .select('id')
+        .gt('precio', 0)
+        .eq('activo', true)
+        .not('imagen', 'is', null)
+        .neq('imagen', '')
+        .in('tipo_id', tiposIds)
+
+      if (errorTipo) {
+        console.error('Error fetching products by tipo:', errorTipo)
+      } else {
+        productIds = [...productIds, ...(productosPorTipo?.map(p => String(p.id)) || [])]
+        console.log('🔍 Productos por tipos:', productosPorTipo?.length || 0)
+      }
+    }
+
+    // Caso 2: Si se especificó presentación, también buscar productos con presentacion_id directo
+    if (presentacionId) {
+      const { data: productosPorPresentacion, error: errorPres } = await supabase
+        .from('productos')
+        .select('id')
+        .gt('precio', 0)
+        .eq('activo', true)
+        .not('imagen', 'is', null)
+        .neq('imagen', '')
+        .eq('presentacion_id', presentacionId)
+
+      if (errorPres) {
+        console.error('Error fetching products by presentacion:', errorPres)
+      } else {
+        productIds = [...productIds, ...(productosPorPresentacion?.map(p => String(p.id)) || [])]
+        console.log('🔍 Productos por presentacion_id:', productosPorPresentacion?.length || 0)
+      }
+    }
+
+    // Eliminar duplicados
+    productIds = Array.from(new Set(productIds))
+    console.log('🔍 Total productos únicos encontrados:', productIds.length)
+
+    // Si no hay productos, retornar vacío
+    if (productIds.length === 0) {
+      return []
     }
 
     // Si hay zona, filtrar por stock
@@ -1026,14 +1090,26 @@ export async function getProductsByHierarchy(
       console.log('🔍 Productos con stock en zona:', productosConStock.length)
 
       if (productosConStock.length > 0) {
-        query = query.in('id', productosConStock)
+        // Intersección entre productIds y productosConStock
+        const stockSet = new Set(productosConStock.map(id => String(id)))
+        productIds = productIds.filter(id => stockSet.has(id))
+        console.log('🔍 Productos después de filtrar por stock:', productIds.length)
       } else {
         // No hay stock, retornar vacío
         return []
       }
     }
 
-    const { data, error } = await query
+    // Si después de filtrar no hay productos, retornar vacío
+    if (productIds.length === 0) {
+      return []
+    }
+
+    // Obtener los datos completos de los productos
+    const { data, error } = await supabase
+      .from('productos')
+      .select('*')
+      .in('id', productIds)
       .order('destacado', { ascending: false })
       .order('descripcion', { ascending: true })
 
@@ -1072,10 +1148,10 @@ export async function getProductsByHierarchy(
 
     // Transformar datos
     const transformedData = data?.map(product => {
-      const categoria = categoriesMap.get(product.fk_id_categoria) || 
+      const categoria = categoriesMap.get(product.fk_id_categoria) ||
                        { id: product.fk_id_categoria || 1, descripcion: `Categoría ${product.fk_id_categoria || 1}` }
-      
-      const marca = brandsMap.get(product.fk_id_marca) || 
+
+      const marca = brandsMap.get(product.fk_id_marca) ||
                    { id: product.fk_id_marca || 1, descripcion: `Marca ${product.fk_id_marca || 1}` }
 
       const presentacion = product.presentacion_id ? presentacionesMap.get(product.presentacion_id) : undefined
@@ -1093,6 +1169,16 @@ export async function getProductsByHierarchy(
         tipo
       }
     }) || []
+
+    // Log de depuración - mostrar algunos productos con sus presentaciones
+    if (transformedData.length > 0) {
+      console.log('🔍 getProductsByHierarchy - Primeros 5 productos:')
+      transformedData.slice(0, 5).forEach(p => {
+        console.log(`  - ${p.descripcion} | presentacion_id: ${p.presentacion_id} | tipo_id: ${p.tipo_id} | categoria: ${p.categoria?.descripcion}`)
+      })
+    }
+
+    console.log('🔍 getProductsByHierarchy - Total productos retornados:', transformedData.length)
 
     // NO filtrar por zona aquí porque ya se filtró en las queries
     return transformedData
