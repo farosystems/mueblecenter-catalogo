@@ -82,10 +82,19 @@ export default function FinancingPlansLarge({ productoId, precio, showDebug = fa
     'bg-indigo-100 text-indigo-800'
   ]
 
-  // Ordenar planes: 3 cuotas primero, luego el resto
+  // Ordenar planes: contado (1), luego 3, 6, 12 cuotas
   const planesOrdenados = [...planes].sort((a, b) => {
-    if (a.cuotas === 3) return -1
-    if (b.cuotas === 3) return 1
+    const orden = [1, 3, 6, 12]
+    const indexA = orden.indexOf(a.cuotas)
+    const indexB = orden.indexOf(b.cuotas)
+
+    // Si ambos están en el orden definido, usar ese orden
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB
+    // Si solo A está en el orden, va primero
+    if (indexA !== -1) return -1
+    // Si solo B está en el orden, va primero
+    if (indexB !== -1) return 1
+    // Si ninguno está en el orden, ordenar por número de cuotas
     return a.cuotas - b.cuotas
   })
 
@@ -125,12 +134,14 @@ export default function FinancingPlansLarge({ productoId, precio, showDebug = fa
             <div
               key={plan.id}
               className={`p-3 rounded-lg text-center font-bold text-base ${
-                plan.cuotas === 3 ? 'bg-yellow-200 text-yellow-900 ring-2 ring-yellow-400' : colores[index % colores.length]
+                plan.recargo_porcentual === 0 && plan.recargo_fijo === 0 && plan.cuotas > 1 ? 'bg-yellow-200 text-yellow-900 ring-2 ring-yellow-400' : colores[index % colores.length]
               }`}
             >
               <div className="mb-1">
                 <div className="text-xl mb-1">
-                  {plan.cuotas === 3 ?
+                  {plan.cuotas === 1 ?
+                    `Precio de contado de $${formatearCuota(calculo.cuota_mensual)}` :
+                    plan.recargo_porcentual === 0 && plan.recargo_fijo === 0 ?
                     `${plan.cuotas} cuotas sin interés de $${formatearCuota(calculo.cuota_mensual)}` :
                     `${plan.cuotas} cuotas fijas de $${formatearCuota(calculo.cuota_mensual)}`
                   }

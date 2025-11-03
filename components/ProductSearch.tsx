@@ -266,6 +266,9 @@ function ProductFinancingPrices({ product }: { product: Product }) {
 
   // Tomar el primer plan disponible
   const primerPlan = planes[0]
+  if (!primerPlan) {
+    return null
+  }
   const calculo = calcularCuota(product.precio || 0, primerPlan)
 
   if (!calculo) {
@@ -287,7 +290,10 @@ function ProductFinancingPrices({ product }: { product: Product }) {
         </div>
       )}
       <div className="text-sm font-bold text-blue-600">
-        ${formatearPrecio(calculo.cuota_mensual)} × {primerPlan.cuotas}
+        {primerPlan.cuotas === 1
+          ? `Precio de contado de $${formatearPrecio(calculo.cuota_mensual)}`
+          : `${primerPlan.cuotas} cuotas fijas de $${formatearPrecio(calculo.cuota_mensual)}`
+        }
       </div>
     </div>
   )
