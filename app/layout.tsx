@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     description: 'Tu tienda de electrodomésticos de confianza con los mejores planes de financiación. Heladeras, lavarropas, aires acondicionados y más.',
     images: [
       {
-        url: '/logo.svg',
+        url: '/logo2.png',
         width: 1200,
         height: 630,
         alt: 'MueblesCenter',
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'MueblesCenter',
     description: 'Tu tienda de electrodomésticos de confianza con los mejores planes de financiación. Heladeras, lavarropas, aires acondicionados y más.',
-    images: ['/logo.svg'],
+    images: ['/logo2.png'],
   },
 }
 
