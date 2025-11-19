@@ -66,13 +66,13 @@ export default function Footer() {
             <h3 className="text-lg font-bold border-b border-green-600 pb-2">Productos</h3>
             <ul className="space-y-2">
               <li>
-                <button 
-                  onClick={scrollToProducts}
+                <Link
+                  href="/productos"
                   className="text-green-100 hover:text-white transition-colors duration-300 flex items-center"
                 >
                   <Package className="mr-2 size-4" />
                   Catálogo completo
-                </button>
+                </Link>
               </li>
               <li>
                 <Link href="/#destacados" className="text-green-100 hover:text-white transition-colors duration-300 flex items-center">
