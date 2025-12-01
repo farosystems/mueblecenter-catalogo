@@ -777,6 +777,7 @@ export async function searchProductsByZona(searchTerm: string, zonaId: number | 
 
 // Obtener productos destacados por zona usando SOLO la tabla productos_destacados_zona
 // Filtra solo productos con stock disponible en la zona
+// Si fk_id_zona es null, el producto se muestra en todas las zonas
 export async function getFeaturedProductsByZona(zonaId: number | null = null): Promise<Product[]> {
   try {
     if (!zonaId) {
@@ -787,11 +788,12 @@ export async function getFeaturedProductsByZona(zonaId: number | null = null): P
 
     console.log('🔍 getFeaturedProductsByZona: Obteniendo destacados para zona:', zonaId)
 
-    // Obtener productos destacados específicos de la zona con JOIN a stock_sucursales
+    // Obtener productos destacados específicos de la zona O con zona null (todas las zonas)
     const { data, error } = await supabase
       .from('productos_destacados_zona')
       .select(`
         fk_id_producto,
+        fk_id_zona,
         orden,
         productos!inner (
           *,
@@ -800,7 +802,7 @@ export async function getFeaturedProductsByZona(zonaId: number | null = null): P
           stock_sucursales!inner(stock, stock_minimo)
         )
       `)
-      .eq('fk_id_zona', zonaId)
+      .or(`fk_id_zona.eq.${zonaId},fk_id_zona.is.null`)
       .eq('activo', true)
       .eq('productos.stock_sucursales.fk_id_zona', zonaId)
       .eq('productos.stock_sucursales.activo', true)
