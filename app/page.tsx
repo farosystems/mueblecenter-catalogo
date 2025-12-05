@@ -7,6 +7,9 @@ import Footer from "@/components/Footer"
 import { mostrarSeccionBienvenidos } from "@/lib/supabase-config"
 // import { ZonaWrapper } from "@/components/ZonaWrapper"
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function Home() {
   const mostrarBienvenida = await mostrarSeccionBienvenidos()
 
