@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { getTelefono, getBanners, getLogo } from '@/lib/supabase-config'
+import { getTelefono, getBannersConLinks, getLogo, BannerConLink } from '@/lib/supabase-config'
 
 export function useConfiguracion() {
   const [telefono, setTelefono] = useState<string | null>(null)
   const [banners, setBanners] = useState<string[]>([])
+  const [bannersConLinks, setBannersConLinks] = useState<BannerConLink[]>([])
   const [logo, setLogo] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -14,11 +15,12 @@ export function useConfiguracion() {
         setLoading(true)
         const [telefonoData, bannersData, logoData] = await Promise.all([
           getTelefono(),
-          getBanners(),
+          getBannersConLinks(),
           getLogo()
         ])
         setTelefono(telefonoData)
-        setBanners(bannersData)
+        setBannersConLinks(bannersData)
+        setBanners(bannersData.map(b => b.imagen))
         setLogo(logoData)
       } catch (err) {
         setError('Error al cargar la configuración')
@@ -31,5 +33,5 @@ export function useConfiguracion() {
     fetchConfiguracion()
   }, [])
 
-  return { telefono, banners, logo, loading, error }
+  return { telefono, banners, bannersConLinks, logo, loading, error }
 }

@@ -15,6 +15,9 @@ export interface ConfiguracionWeb {
   banner_3: string | null
   banner_principal: string | null
   seccion_bienvenidos: boolean | null
+  banner_link: string | null
+  banner_2_link: string | null
+  banner_3_link: string | null
 }
 
 export interface Zona {
@@ -154,11 +157,16 @@ export async function getConfiguracionWeb(): Promise<ConfiguracionWeb[]> {
   }
 }
 
+export interface BannerConLink {
+  imagen: string
+  link: string | null
+}
+
 export async function getBanners(): Promise<string[]> {
   try {
     const configuraciones = await getConfiguracionWeb()
     const banners: string[] = []
-    
+
     configuraciones.forEach(config => {
       // Agregar banner principal si existe
       if (config.banner) {
@@ -173,10 +181,46 @@ export async function getBanners(): Promise<string[]> {
         banners.push(config.banner_3)
       }
     })
-    
+
     return banners
   } catch (error) {
     console.error('Error al obtener banners:', error)
+    return []
+  }
+}
+
+export async function getBannersConLinks(): Promise<BannerConLink[]> {
+  try {
+    const configuraciones = await getConfiguracionWeb()
+    const banners: BannerConLink[] = []
+
+    configuraciones.forEach(config => {
+      // Agregar banner principal si existe
+      if (config.banner) {
+        banners.push({
+          imagen: config.banner,
+          link: config.banner_link
+        })
+      }
+      // Agregar banner_2 si existe
+      if (config.banner_2) {
+        banners.push({
+          imagen: config.banner_2,
+          link: config.banner_2_link
+        })
+      }
+      // Agregar banner_3 si existe
+      if (config.banner_3) {
+        banners.push({
+          imagen: config.banner_3,
+          link: config.banner_3_link
+        })
+      }
+    })
+
+    return banners
+  } catch (error) {
+    console.error('Error al obtener banners con links:', error)
     return []
   }
 }

@@ -1,12 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { useConfiguracion } from "@/hooks/use-configuracion"
 import { useZonaContext } from "@/contexts/ZonaContext"
 import { Card } from "@/components/ui/card"
 
 export default function BannersSection() {
-  const { banners, loading, error } = useConfiguracion()
+  const router = useRouter()
+  const { bannersConLinks, loading, error } = useConfiguracion()
   const { zonaSeleccionada } = useZonaContext()
   const [currentBanner, setCurrentBanner] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
@@ -43,22 +45,37 @@ export default function BannersSection() {
     return whatsappMap[zonaSeleccionada.nombre || ''] || '1130938491'
   }
 
-  // Función para abrir WhatsApp cuando se hace clic en el banner
-  const handleBannerClick = () => {
-    const phoneNumber = getWhatsAppNumber()
-    const message = encodeURIComponent('Hola, me gustaría obtener más información acerca de los créditos personales')
-    window.open(`https://wa.me/549${phoneNumber}?text=${message}`, '_blank')
+  // Función para manejar el clic en el banner
+  const handleBannerClick = (link: string | null) => {
+    if (!link) return
+
+    // Verificar si es una URL externa o interna
+    try {
+      const url = new URL(link, window.location.origin)
+      const isExternal = url.origin !== window.location.origin
+
+      if (isExternal) {
+        // Link externo: abrir en la misma pestaña
+        window.location.href = link
+      } else {
+        // Link interno: usar router de Next.js para mantener el contexto
+        router.push(url.pathname)
+      }
+    } catch (e) {
+      // Si falla el parseo, asumir que es una ruta interna
+      router.push(link)
+    }
   }
 
   useEffect(() => {
-    if (banners.length > 1) {
+    if (bannersConLinks.length > 1) {
       const interval = setInterval(() => {
-        changeBanner((currentBanner + 1) % banners.length)
+        changeBanner((currentBanner + 1) % bannersConLinks.length)
       }, 5000) // Cambiar banner cada 5 segundos
 
       return () => clearInterval(interval)
     }
-  }, [banners.length, currentBanner])
+  }, [bannersConLinks.length, currentBanner])
 
   if (loading) {
     return (
@@ -72,7 +89,7 @@ export default function BannersSection() {
     )
   }
 
-  if (error || banners.length === 0) {
+  if (error || bannersConLinks.length === 0) {
     return null
   }
 
@@ -91,16 +108,16 @@ export default function BannersSection() {
             <div className="relative w-full rounded-xl overflow-hidden shadow-xl">
               <div className="relative flex transition-transform duration-500 ease-in-out"
                    style={{ transform: `translateX(-${currentBanner * 100}%)` }}>
-                {banners.map((banner, index) => (
+                {bannersConLinks.map((banner, index) => (
                   <div
                     key={index}
                     className={`w-full flex-shrink-0 bg-white flex items-center justify-center min-h-[200px] ${
-                      index === 0 ? 'cursor-pointer hover:opacity-95 transition-opacity' : ''
+                      banner.link ? 'cursor-pointer hover:opacity-95 transition-opacity' : ''
                     }`}
-                    onClick={index === 0 ? handleBannerClick : undefined}
+                    onClick={() => handleBannerClick(banner.link)}
                   >
                     <img
-                      src={banner}
+                      src={banner.imagen}
                       alt={`Banner ${index + 1}`}
                       className="max-w-full max-h-[80vh] w-auto h-auto object-contain"
                       onError={(e) => {
@@ -113,9 +130,9 @@ export default function BannersSection() {
               </div>
               
               {/* Indicadores de banner múltiples */}
-              {banners.length > 1 && (
+              {bannersConLinks.length > 1 && (
                 <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                  {banners.map((_, index) => (
+                  {bannersConLinks.map((_, index) => (
                     <button
                       key={index}
                       onClick={() => changeBanner(index)}
@@ -131,10 +148,10 @@ export default function BannersSection() {
             </div>
 
             {/* Navegación manual para banners múltiples */}
-            {banners.length > 1 && (
+            {bannersConLinks.length > 1 && (
               <>
                 <button
-                  onClick={() => changeBanner((currentBanner - 1 + banners.length) % banners.length)}
+                  onClick={() => changeBanner((currentBanner - 1 + bannersConLinks.length) % bannersConLinks.length)}
                   disabled={isAnimating}
                   className={`absolute left-8 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white text-green-900 rounded-full p-3 shadow-2xl transition-all duration-500 hover:scale-110 active:scale-95 ${
                     isAnimating ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-3xl'
@@ -144,9 +161,9 @@ export default function BannersSection() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-                
+
                 <button
-                  onClick={() => changeBanner((currentBanner + 1) % banners.length)}
+                  onClick={() => changeBanner((currentBanner + 1) % bannersConLinks.length)}
                   disabled={isAnimating}
                   className={`absolute right-8 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white text-green-900 rounded-full p-3 shadow-2xl transition-all duration-500 hover:scale-110 active:scale-95 ${
                     isAnimating ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-3xl'
