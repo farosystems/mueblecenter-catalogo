@@ -14,6 +14,7 @@ export interface ConfiguracionWeb {
   banner_2: string | null
   banner_3: string | null
   banner_principal: string | null
+  seccion_bienvenidos: boolean | null
 }
 
 export interface Zona {
@@ -321,5 +322,18 @@ export async function getLogo(): Promise<string | null> {
   } catch (error) {
     console.error('Error al obtener logo:', error)
     return null // Retorna null en caso de error
+  }
+}
+
+// Función para verificar si se debe mostrar la sección de bienvenida
+export async function mostrarSeccionBienvenidos(): Promise<boolean> {
+  try {
+    const configuraciones = await getConfiguracionWeb()
+    const config = configuraciones[0]
+    // Por defecto retorna true si no está definido
+    return config?.seccion_bienvenidos ?? true
+  } catch (error) {
+    console.error('Error al obtener configuración de sección bienvenidos:', error)
+    return true // Por defecto muestra la sección en caso de error
   }
 }
