@@ -6,6 +6,7 @@ import { useConfiguracion } from "@/hooks/use-configuracion"
 import { useZonaContext } from "@/contexts/ZonaContext"
 import { getTelefonoPorZona } from "@/lib/supabase-config"
 import { useWhatsAppSuccess } from "@/contexts/WhatsAppSuccessContext"
+import { trackWhatsAppClick } from "@/lib/analytics"
 
 interface WhatsAppButtonProps {
   product: Product
@@ -83,6 +84,14 @@ export default function WhatsAppButton({ product, onSuccess }: WhatsAppButtonPro
   }
 
   const handleClick = () => {
+    // Registrar el click en WhatsApp
+    if (product.id) {
+      trackWhatsAppClick(
+        Number(product.id),
+        product.descripcion || product.name || 'Producto sin nombre'
+      )
+    }
+
     // Determinar si viene de la lista de compras
     const fromShoppingList = product.descripcion?.includes('Lista de') || false
 

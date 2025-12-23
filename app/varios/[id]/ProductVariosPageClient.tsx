@@ -14,6 +14,7 @@ import AddToListButton from "@/components/AddToListButton"
 import FormattedProductDescription from "@/components/FormattedProductDescription"
 import { useProducts } from "@/hooks/use-products"
 import { getProductById } from "@/lib/supabase-products"
+import { trackProductView, trackPageView } from "@/lib/analytics"
 
 interface ProductVariosPageClientProps {
   params: Promise<{
@@ -59,6 +60,16 @@ export default function ProductVariosPageClient({ params }: ProductVariosPageCli
         }
 
         setProduct(productData)
+
+        // Registrar visita al producto
+        trackPageView('product_detail', {
+          producto_id: productData.id,
+          categoria: 'varios'
+        })
+
+        // Registrar visualización del producto
+        trackProductView(Number(productData.id), productData.descripcion)
+
       } catch (err) {
         setError('Error al cargar el producto')
         console.error('Error loading product:', err)

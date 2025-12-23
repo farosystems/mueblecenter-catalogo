@@ -16,6 +16,7 @@ import { useProducts } from "@/hooks/use-products"
 import { getProductById } from "@/lib/supabase-products"
 import { useZonaContext } from "@/contexts/ZonaContext"
 import { getStockProductoEnZona } from "@/lib/supabase-config"
+import { trackProductView, trackPageView } from "@/lib/analytics"
 
 interface ProductPageClientProps {
   params?: Promise<{
@@ -119,6 +120,17 @@ export default function ProductPageClient({
         }
 
         setProduct(productData)
+
+        // Registrar visita al producto
+        trackPageView('product_detail', {
+          producto_id: productData.id,
+          categoria: resolvedParams.categoria,
+          hierarchy_type: hierarchyType
+        })
+
+        // Registrar visualización del producto
+        trackProductView(Number(productData.id), productData.descripcion)
+
       } catch (err) {
         setError('Error al cargar el producto')
         console.error('Error loading product:', err)

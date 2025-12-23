@@ -12,6 +12,7 @@ import { ZonaGuard } from "@/components/ZonaGuard"
 import { Presentacion } from "@/lib/products"
 import { getPresentaciones, getProductsByHierarchy } from "@/lib/supabase-products"
 import { Product } from "@/lib/products"
+import { trackPageView, trackPresentacionView } from "@/lib/analytics"
 
 const PRODUCTS_PER_PAGE = 6
 
@@ -57,6 +58,10 @@ export default function PresentacionPage({ params }: PresentacionPageProps) {
             zonaSeleccionada?.id || null
           )
           setProducts(productsData)
+
+          // Registrar visita a la presentación
+          trackPageView('presentacion', { presentacion: presentacion.nombre })
+          trackPresentacionView(presentacion.nombre)
         }
       } catch (err) {
         console.error('Error loading data:', err)
